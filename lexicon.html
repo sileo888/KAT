@@ -7,177 +7,136 @@
 
   <style>
     /* ============================================================
-       CALM STUDY-PAGE DESIGN
-       You normally never need to touch this style section.
-       To add or change WORDS, scroll all the way down to the part
-       that says  "THE LEXICON ENTRIES".
+       CALM STUDY-PAGE DESIGN  (shared look across all study tools)
+       The WORDS are not in this file — they live in  terms.json .
        ============================================================ */
 
     :root {
-      --paper:      #f6f2ea;   /* soft warm background */
-      --paper-card: #fffdf8;   /* card background      */
-      --ink:        #2c2a26;   /* main text            */
-      --ink-soft:   #6f6a60;   /* quieter text         */
-      --accent:     #9a6a3c;   /* warm brown accent    */
-      --line:       #e6dfd2;   /* hairline borders     */
+      --paper:      #f6f2ea;
+      --paper-card: #fffdf8;
+      --ink:        #2c2a26;
+      --ink-soft:   #6f6a60;
+      --accent:     #9a6a3c;
+      --line:       #e6dfd2;
       --shadow:     0 1px 2px rgba(60,50,35,.05), 0 8px 24px rgba(60,50,35,.06);
     }
-
     @media (prefers-color-scheme: dark) {
       :root {
-        --paper:      #1c1a17;
-        --paper-card: #262320;
-        --ink:        #ece7dd;
-        --ink-soft:   #a9a196;
-        --accent:     #d0a271;
-        --line:       #38332c;
-        --shadow:     0 1px 2px rgba(0,0,0,.25), 0 10px 28px rgba(0,0,0,.30);
+        --paper:#1c1a17; --paper-card:#262320; --ink:#ece7dd; --ink-soft:#a9a196;
+        --accent:#d0a271; --line:#38332c; --shadow:0 1px 2px rgba(0,0,0,.25),0 10px 28px rgba(0,0,0,.30);
       }
     }
 
     * { box-sizing: border-box; }
-
     html { scroll-behavior: smooth; }
-
     body {
-      margin: 0;
-      background: var(--paper);
-      color: var(--ink);
+      margin: 0; background: var(--paper); color: var(--ink);
       font-family: Georgia, "Iowan Old Style", "Palatino Linotype", Palatino, serif;
-      line-height: 1.65;
-      -webkit-font-smoothing: antialiased;
-      text-rendering: optimizeLegibility;
+      line-height: 1.65; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
     }
+    .wrap { max-width: 760px; margin: 0 auto; padding: 3.4vh 22px 14vh; }
 
-    .wrap {
-      max-width: 760px;
-      margin: 0 auto;
-      padding: 7vh 22px 14vh;
+    /* ---- Top navigation ---- */
+    .nav { display: flex; gap: .4rem; justify-content: center; flex-wrap: wrap; margin-bottom: 2.4rem; }
+    .nav a {
+      text-decoration: none; color: var(--ink-soft); font-size: 1rem;
+      padding: .4rem .85rem; border-radius: 10px; border: 1px solid transparent;
+      transition: color .15s ease, border-color .15s ease;
     }
+    .nav a:hover { color: var(--accent); }
+    .nav a.here { color: var(--accent); border-color: var(--line); background: var(--paper-card); }
 
     /* ---- Header ---- */
     header { text-align: center; margin-bottom: 2.2rem; }
-
-    h1 {
-      font-size: clamp(2.1rem, 6vw, 3.1rem);
-      line-height: 1.1;
-      letter-spacing: .01em;
-      margin: 0 0 .5rem;
-      font-weight: 600;
-    }
-
-    .subtitle {
-      color: var(--ink-soft);
-      font-size: clamp(1rem, 2.4vw, 1.15rem);
-      font-style: italic;
-      margin: 0;
-    }
+    h1 { font-size: clamp(2.1rem, 6vw, 3.1rem); line-height: 1.1; margin: 0 0 .5rem; font-weight: 600; letter-spacing: .01em; }
+    .subtitle { color: var(--ink-soft); font-size: clamp(1rem, 2.4vw, 1.15rem); font-style: italic; margin: 0; }
 
     /* ---- Search ---- */
-    .search-area { position: sticky; top: 0; z-index: 5; padding: 1.2rem 0 .6rem; background: linear-gradient(var(--paper) 78%, transparent); }
-
+    .search-area { position: sticky; top: 0; z-index: 5; padding: 1.1rem 0 .6rem; background: linear-gradient(var(--paper) 78%, transparent); }
     #search {
-      width: 100%;
-      font-family: inherit;
-      font-size: 1.15rem;
-      color: var(--ink);
-      background: var(--paper-card);
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      padding: .95rem 1.15rem;
-      box-shadow: var(--shadow);
-      outline: none;
-      transition: border-color .18s ease, box-shadow .18s ease;
+      width: 100%; font-family: inherit; font-size: 1.15rem; color: var(--ink);
+      background: var(--paper-card); border: 1px solid var(--line); border-radius: 14px;
+      padding: .95rem 1.15rem; box-shadow: var(--shadow); outline: none;
+      transition: border-color .18s ease;
     }
     #search::placeholder { color: var(--ink-soft); font-style: italic; }
     #search:focus { border-color: var(--accent); }
-
-    .count {
-      text-align: center;
-      color: var(--ink-soft);
-      font-size: .9rem;
-      font-style: italic;
-      margin: .3rem 0 1rem;
-      min-height: 1.2em;
-    }
+    .count { text-align: center; color: var(--ink-soft); font-size: .9rem; font-style: italic; margin: .3rem 0 1rem; min-height: 1.2em; }
 
     /* ---- A to Z jump row ---- */
-    .az {
-      display: flex;
-      flex-wrap: wrap;
-      gap: .35rem;
-      justify-content: center;
-      margin: 0 0 2.2rem;
-    }
+    .az { display: flex; flex-wrap: wrap; gap: .35rem; justify-content: center; margin: 0 0 2.2rem; }
     .az-letter {
-      font-family: inherit;
-      font-size: .95rem;
-      color: var(--ink-soft);
-      background: var(--paper-card);
-      border: 1px solid var(--line);
-      border-radius: 9px;
-      min-width: 2rem;
-      padding: .32rem .2rem;
-      cursor: pointer;
-      transition: color .15s ease, border-color .15s ease;
+      font-family: inherit; font-size: .95rem; color: var(--ink-soft); background: var(--paper-card);
+      border: 1px solid var(--line); border-radius: 9px; min-width: 2rem; padding: .32rem .2rem;
+      cursor: pointer; transition: color .15s ease, border-color .15s ease;
     }
     .az-letter:hover { color: var(--accent); border-color: var(--accent); }
 
     /* ---- Cards ---- */
     .card {
-      background: var(--paper-card);
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      padding: 1.7rem 1.8rem;
-      margin: 0 0 1.15rem;
-      box-shadow: var(--shadow);
-      scroll-margin-top: 96px;   /* so jumps land clear of the search bar */
+      background: var(--paper-card); border: 1px solid var(--line); border-radius: 18px;
+      padding: 1.7rem 1.8rem; margin: 0 0 1.15rem; box-shadow: var(--shadow); scroll-margin-top: 96px;
+    }
+    .term { font-size: clamp(1.5rem, 4vw, 2rem); font-weight: 600; letter-spacing: .04em; margin: 0 0 .55rem; color: var(--accent); }
+    .definition { font-size: clamp(1.08rem, 2.6vw, 1.22rem); color: var(--ink); margin: 0; }
+    .deflabel { font-variant: small-caps; letter-spacing: .03em; font-weight: 700; color: var(--accent); }
+
+    /* ---- Superseded original (kept, never deleted) ---- */
+    .superseded {
+      font-size: .95rem; color: var(--ink-soft); margin: .95rem 0 0; padding-top: .8rem;
+      border-top: 1px dashed var(--line);
+    }
+    .sup-label { font-variant: small-caps; letter-spacing: .03em; font-weight: 700; color: var(--ink-soft); display: inline; }
+
+    /* ---- Correction drafting tool ---- */
+    .card-tools { margin-top: 1.1rem; }
+    button { font-family: inherit; cursor: pointer; }
+    .btn-draft {
+      font-size: .9rem; color: var(--ink-soft); background: transparent;
+      border: 1px solid var(--line); border-radius: 10px; padding: .4rem .8rem;
+      transition: color .15s ease, border-color .15s ease;
+    }
+    .btn-draft:hover { color: var(--accent); border-color: var(--accent); }
+
+    .correction { margin-top: 1rem; }
+    .corr-hint { display: block; font-size: .9rem; color: var(--ink-soft); font-style: italic; margin-bottom: .5rem; }
+    .corr-input {
+      width: 100%; min-height: 8rem; font-family: inherit; font-size: 1.02rem; line-height: 1.5;
+      color: var(--ink); background: var(--paper); border: 1px solid var(--line); border-radius: 12px;
+      padding: .8rem .9rem; outline: none; resize: vertical;
+    }
+    .corr-input:focus { border-color: var(--accent); }
+    .corr-actions { display: flex; gap: .5rem; margin-top: .6rem; flex-wrap: wrap; }
+    .btn-primary {
+      font-size: .9rem; color: #fff; background: var(--accent); border: 1px solid var(--accent);
+      border-radius: 10px; padding: .5rem .95rem;
+    }
+    .btn-quiet {
+      font-size: .9rem; color: var(--ink-soft); background: transparent; border: 1px solid var(--line);
+      border-radius: 10px; padding: .5rem .95rem;
+    }
+    .corr-output { margin-top: 1rem; }
+    .corr-note { font-size: .9rem; color: var(--ink-soft); font-style: italic; margin: 0 0 .5rem; }
+    .corr-block {
+      white-space: pre-wrap; word-break: break-word; font-family: ui-monospace, Menlo, Consolas, monospace;
+      font-size: .92rem; line-height: 1.55; color: var(--ink); background: var(--paper);
+      border: 1px solid var(--line); border-radius: 12px; padding: .9rem 1rem; margin: 0 0 .6rem;
     }
 
-    .term {
-      font-size: clamp(1.5rem, 4vw, 2rem);
-      font-weight: 600;
-      letter-spacing: .04em;
-      margin: 0 0 .55rem;
-      color: var(--accent);
-    }
-
-    .definition {
-      font-size: clamp(1.08rem, 2.6vw, 1.22rem);
-      color: var(--ink);
-      margin: 0;
-    }
-
-    /* Subtle styling for labeled parts (Root / KAT reading / …) */
-    .deflabel {
-      font-variant: small-caps;
-      letter-spacing: .03em;
-      font-weight: 700;
-      color: var(--accent);
-    }
-
-    mark { background: rgba(154,106,60,.22); color: inherit; border-radius: 3px; padding: 0 .1em; }
-
-    .empty {
-      text-align: center;
-      color: var(--ink-soft);
-      font-style: italic;
-      padding: 2rem 0;
-      display: none;
-    }
-
-    footer {
-      margin-top: 4rem;
-      text-align: center;
-      color: var(--ink-soft);
-      font-size: .85rem;
-      font-style: italic;
-    }
+    .empty { text-align: center; color: var(--ink-soft); font-style: italic; padding: 2rem 0; display: none; }
+    .status { text-align: center; color: var(--ink-soft); font-style: italic; padding: 2rem 0; }
+    footer { margin-top: 4rem; text-align: center; color: var(--ink-soft); font-size: .85rem; font-style: italic; }
   </style>
 </head>
 
 <body>
   <div class="wrap">
+    <nav class="nav">
+      <a href="index.html">Home</a>
+      <a href="lexicon.html" class="here">Lexicon</a>
+      <a href="flashcards.html">Flash Cards</a>
+    </nav>
+
     <header>
       <h1>Lexicon</h1>
       <p class="subtitle">A vocabulary of key terms</p>
@@ -193,220 +152,41 @@
 
     <main id="cards"></main>
     <p class="empty" id="empty">No entries match your search.</p>
+    <p class="status" id="status">Loading the lexicon…</p>
 
-    <footer>Study lexicon · terms are kept in alphabetical order for easy reading.</footer>
+    <footer>Study lexicon · terms are kept in alphabetical order · originals are never deleted.</footer>
   </div>
 
-
-  <!-- ============================================================
-       THE LEXICON ENTRIES
-       ============================================================
-
-       This is the ONLY part you need to touch to add new words.
-
-       Each entry looks like this:
-
-           {
-             term: "WORD",
-             definition: `The meaning goes here.`
-           },
-
-       Note the definition is wrapped in back-ticks ` ` (the key just
-       left of the 1 key), NOT normal quotes. Back-ticks let a meaning
-       safely contain quotation marks like "this" and apostrophes.
-
-       TO ADD A NEW WORD:
-         1. Copy one whole block (from the { to the },  including the comma).
-         2. Paste it into the list below.
-         3. Change the WORD and the meaning.
-         4. Keep the " " around the WORD and the ` ` around the meaning.
-
-       (Or just ask in plain English — "add the word X meaning Y" —
-        and it will be placed here for you.)
-
-       The page automatically alphabetises the list and rebuilds the
-       A–Z jump row, so you never have to worry about placement.
-       ============================================================ -->
-
+  <script src="shared.js"></script>
   <script>
-    const ENTRIES = [
-
-      {
-        term: "ANOTHEN",
-        definition: `"From above."`
-      },
-
-      {
-        term: "APOKATASTASIS",
-        definition: `(Acts 3:21) A critical reality-establisher: the restoration of all things — receiver repair at creation scale.`
-      },
-
-      {
-        term: "BAPTISM",
-        definition: `Immersion in the sound of sustained prayer — not physical water.`
-      },
-
-      {
-        term: "GINOSKO",
-        definition: `Intimate communion; being known. "I never knew you" = "we never had intimate communion."`
-      },
-
-      {
-        term: "ICE SKATING PRAYER",
-        definition: `The effortless extension of what is already true — the book's most practical tool.`
-      },
-
-      {
-        term: "KOLASIS",
-        definition: `Pruning — restorative, not torture.`
-      },
-
-      {
-        term: "LIGHT / DARKNESS",
-        definition: `Epistemic, not moral. Light = known and manifest things; darkness = hidden things. 2 Corinthians 4:6 fuses light with the water-flood imagery through Habakkuk 2:14's phrase — "the knowledge of the glory."`
-      },
-
-      {
-        term: "MERCY",
-        definition: `Root: Latin mercēs, "wages, price," from merx, "goods" — the same family as merchant, commerce, market. Rooted in exchange; the Christian development made it the gift to those from whom no requital can be expected — the exchange that dissolves the ledger. KAT reading: MERCY = "I in you and you in me" — the exchange perfected into oneness. Anchor: the Mercy Seat (Hebrew kapporeth; Exodus 25:22, "there I will meet with you") — mercy named as the meeting-place of the presence, made architectural. Kosmos reception: mercy = "you deserve a thumping but I'll withhold it" — judgment management; the symptom of a world that missed oneness.`
-      },
-
-      {
-        term: "METANOIA",
-        definition: `Going beyond the mind of man into the mind of Christ.`
-      },
-
-      {
-        term: "NAOS / TEMPLE",
-        definition: `The nervous system as antenna — the receiver.`
-      },
-
-      {
-        term: "NARROW GATE / THLIBO",
-        definition: `The internal olive press extracting the oil.`
-      },
-
-      {
-        term: "OIL",
-        definition: `Intimacy specifically — not mere presence. Ginosko; being known. The olive dies to itself to yield a categorically different substance — real transformation through death and crushing. The crushing (thlipsis) presses out the oil. The ten virgins: oil is necessary but not sufficient.`
-      },
-
-      {
-        term: "OPERATING FROM THE HEAVENLY REALITY",
-        definition: `The ongoing cyclical movement mastered by "Prophets at the Gate."`
-      },
-
-      {
-        term: "PALINGENESIA",
-        definition: `(Matthew 19:28; Titus 3:5) A critical reality-establisher: restoration and new birth fused in one word.`
-      },
-
-      {
-        term: "PTOCHOS",
-        definition: `Spiritual bankruptcy; with kenosis, the entry point into metanoia.`
-      },
-
-      {
-        term: "REALITY",
-        definition: `The neutral idea-to-thing process — not only the true actualization. Two forms: the one Heavenly Reality (true actualization) versus countless shifting Kosmos realities — shared hallucinations believed into "worlds," millions of shifting shades and shadows, subcultural worlds people move between across a life. The shifting quality is itself diagnostic of the Kosmos: the real thing does not shift.`
-      },
-
-      {
-        term: "REBORN",
-        definition: `A one-time, unmistakable threshold — the end of spectatorship. Framed as promise, not verdict.`
-      },
-
-      {
-        term: "SANDPAPER PRAYER",
-        definition: `Kosmos striving; coercion.`
-      },
-
-      {
-        term: "SEA",
-        definition: `The beast — the Kosmos in liquid form. Habakkuk 2:14: the saturating presence drowning the beast.`
-      },
-
-      {
-        term: "SIN",
-        definition: `Root: Greek hamartia, "to miss the mark" — an archery term; Hebrew chata, likewise "to miss." Sin at root is a miss, not a crime. KAT reading: the mark is the Highest Point of heaven; sin is the aim going sideways — toward the False Summits, the Kosmos — instead of up to the Gate. Kosmos reception: "sin" = wrong behavior — but behavior is the downstream symptom of the miss, not the miss itself.`
-      },
-
-      {
-        term: "SINGLE EYE",
-        definition: `Observer and observed merge.`
-      },
-
-      {
-        term: "SON OF GOD",
-        definition: `A healed, active vessel who participates in the divine nature rather than spectating.`
-      },
-
-      {
-        term: "TENDER MERCY",
-        definition: `Always written TENDER MERCY, never bare "mercy" — the reinforce-by-renaming device. Root: Hebrew rachamim, from rechem = womb — womb-compassion, a mother's cherishing of the child within her: the most literal "I in you and you in me" image. "Tender mercies" appears about ten times in the Psalms, plus Proverbs 12:10; in the NT, Luke 1:78 and James 5:11. Two roots converge — mercēs (exchange perfected into oneness) and rachamim (womb, tender union) — and both flee the courtroom.`
-      },
-
-      {
-        term: "TESTING",
-        definition: `The same pressure as thlipsis, leaned on hard — testing, discipline, suffering. Kept as its own entry for now.`
-      },
-
-      {
-        term: "THE ONLY PRAYER",
-        definition: `Declaring God's presence to all creation; it triggers the Wind.`
-      },
-
-      {
-        term: "THLIPSIS",
-        definition: `The pressure. The Kosmos's neediness pressing you to believe in it — the inner olive press. Leaned on hard enough, it becomes testing, discipline, suffering. The press is what extracts the oil.`
-      },
-
-      {
-        term: "ULTRACONFIDENCE",
-        definition: `The result of the validation complex.`
-      },
-
-      {
-        term: "VALIDATION COMPLEX",
-        definition: `The Breath (physical, involuntary) plus the Resonance (inner conviction) — dual haptic feedback, used as a diagnostic.`
-      },
-
-      {
-        term: "WATER",
-        definition: `Saturating presence — presence at a concentration that cannot be ignored. Flood-stage versus ambient humidity.`
-      }
-
-    ];
-  </script>
-
-
-  <!-- ============================================================
-       The engine below draws the cards, styles the labels, builds
-       the A–Z row, and runs the search.
-       You do not need to change anything here.
-       ============================================================ -->
-  <script>
-    const cardsEl = document.getElementById("cards");
-    const emptyEl = document.getElementById("empty");
-    const countEl = document.getElementById("count");
+    const cardsEl  = document.getElementById("cards");
+    const emptyEl  = document.getElementById("empty");
+    const countEl  = document.getElementById("count");
     const searchEl = document.getElementById("search");
-    const azEl = document.getElementById("az");
+    const azEl     = document.getElementById("az");
+    const statusEl = document.getElementById("status");
 
-    // Keep entries alphabetical by term for calm, predictable reading.
-    const sorted = [...ENTRIES].sort((a, b) => a.term.localeCompare(b.term));
+    let sorted = [];
+    let letters = [];
+    let firstIndex = {};
 
-    // Work out which first-letters exist, and the first card for each.
-    const letters = [];
-    const firstIndex = {};
-    sorted.forEach((e, i) => {
-      const L = e.term.trim().charAt(0).toUpperCase();
-      if (!(L in firstIndex)) { firstIndex[L] = i; letters.push(L); }
-    });
+    function markQuery(safe, query) {
+      if (!query) return safe;
+      const q = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      return safe.replace(new RegExp("(" + q + ")", "gi"), "<mark>$1</mark>");
+    }
+    function termHTML(term, query) { return markQuery(escapeHtml(term), query); }
 
-    // Build the A–Z jump row.
-    azEl.innerHTML = letters
-      .map(L => '<button class="az-letter" type="button" data-letter="' + L + '">' + L + "</button>")
-      .join("");
+    function buildAZ() {
+      letters = []; firstIndex = {};
+      sorted.forEach((e, i) => {
+        const L = e.term.trim().charAt(0).toUpperCase();
+        if (!(L in firstIndex)) { firstIndex[L] = i; letters.push(L); }
+      });
+      azEl.innerHTML = letters
+        .map(L => '<button class="az-letter" type="button" data-letter="' + L + '">' + L + "</button>")
+        .join("");
+    }
 
     azEl.addEventListener("click", e => {
       const btn = e.target.closest(".az-letter");
@@ -415,47 +195,48 @@
       if (card) card.scrollIntoView({ behavior: "smooth", block: "start" });
     });
 
-    function escapeHtml(s) {
-      return s.replace(/[&<>"']/g, c => (
-        { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]
-      ));
-    }
-
-    // Labelled parts that appear inside some definitions.
-    const LABELS = ["Root:", "KAT reading:", "Kosmos reception:", "Anchor:"];
-    function styleLabels(html) {
-      LABELS.forEach(l => { html = html.split(l).join('<span class="deflabel">' + l + "</span>"); });
-      return html;
-    }
-
-    // Wrap the matching part of text in <mark> so searches highlight.
-    function markQuery(safe, query) {
-      if (!query) return safe;
-      const q = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      return safe.replace(new RegExp("(" + q + ")", "gi"), "<mark>$1</mark>");
-    }
-
     function render(query = "") {
       const q = query.trim().toLowerCase();
+      const decorate = safe => markQuery(safe, query);
       let shown = 0;
       cardsEl.innerHTML = "";
 
-      sorted.forEach((entry, i) => {
-        const hay = (entry.term + " " + entry.definition).toLowerCase();
+      sorted.forEach((t, i) => {
+        const hay = (t.term + " " + t.original + " " + (t.corrected || "")).toLowerCase();
         if (q && !hay.includes(q)) return;
         shown++;
 
         const card = document.createElement("article");
         card.className = "card";
         card.id = "term-" + i;
+        card.dataset.index = i;
         card.innerHTML =
-          '<h2 class="term">' + markQuery(escapeHtml(entry.term), query) + "</h2>" +
-          '<p class="definition">' + styleLabels(markQuery(escapeHtml(entry.definition), query)) + "</p>";
+          '<h2 class="term">' + termHTML(t.term, query) + "</h2>" +
+          definitionBlockHTML(t, decorate) +
+          '<div class="card-tools">' +
+            '<button class="btn-draft" type="button" data-action="draft">Draft a correction</button>' +
+          "</div>" +
+          '<div class="correction" hidden>' +
+            '<label class="corr-hint">Edit the wording below, then make a copy-ready block. Nothing is saved here.</label>' +
+            '<textarea class="corr-input" aria-label="Corrected definition"></textarea>' +
+            '<div class="corr-actions">' +
+              '<button class="btn-primary" type="button" data-action="make">Make copy-ready block</button>' +
+              '<button class="btn-quiet" type="button" data-action="close">Close</button>' +
+            "</div>" +
+            '<div class="corr-output" hidden>' +
+              '<p class="corr-note">Copy this and paste it wherever you keep your changes (for example, send it to me):</p>' +
+              '<pre class="corr-block"></pre>' +
+              '<button class="btn-quiet" type="button" data-action="copy">Copy</button>' +
+            "</div>" +
+          "</div>";
+
+        // Pre-fill the editor with the definition currently in force.
+        card.querySelector(".corr-input").value = currentDefinition(t);
         cardsEl.appendChild(card);
       });
 
       emptyEl.style.display = shown === 0 ? "block" : "none";
-      azEl.style.display = q ? "none" : "flex";   // hide the jump row while searching
+      azEl.style.display = q ? "none" : "flex";
 
       const total = sorted.length;
       countEl.textContent = q
@@ -463,8 +244,64 @@
         : total + " term" + (total === 1 ? "" : "s");
     }
 
+    // Correction tool — all buttons handled here by delegation.
+    cardsEl.addEventListener("click", e => {
+      const btn = e.target.closest("button[data-action]");
+      if (!btn) return;
+      const card = e.target.closest(".card");
+      if (!card) return;
+      const t = sorted[Number(card.dataset.index)];
+      const panel  = card.querySelector(".correction");
+      const output = card.querySelector(".corr-output");
+      const input  = card.querySelector(".corr-input");
+      const block  = card.querySelector(".corr-block");
+
+      if (btn.dataset.action === "draft") {
+        const open = !panel.hasAttribute("hidden");
+        if (open) { panel.setAttribute("hidden", ""); }
+        else { panel.removeAttribute("hidden"); input.focus(); }
+      }
+      else if (btn.dataset.action === "make") {
+        block.textContent =
+          "CORRECTION FOR THE LEXICON\n" +
+          "Term: " + t.term + "\n" +
+          "Corrected definition:\n" + input.value.trim() + "\n" +
+          "Date: " + todayISO();
+        output.removeAttribute("hidden");
+      }
+      else if (btn.dataset.action === "copy") {
+        const text = block.textContent;
+        const done = () => { btn.textContent = "Copied!"; setTimeout(() => (btn.textContent = "Copy"), 1600); };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(done, () => fallbackCopy(text, done));
+        } else { fallbackCopy(text, done); }
+      }
+      else if (btn.dataset.action === "close") {
+        panel.setAttribute("hidden", "");
+        output.setAttribute("hidden", "");
+      }
+    });
+
+    function fallbackCopy(text, done) {
+      const ta = document.createElement("textarea");
+      ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.focus(); ta.select();
+      try { document.execCommand("copy"); done(); } catch (_) {}
+      document.body.removeChild(ta);
+    }
+
     searchEl.addEventListener("input", e => render(e.target.value));
-    render();
+
+    loadTerms()
+      .then(terms => {
+        sorted = sortTerms(terms);
+        statusEl.style.display = "none";
+        buildAZ();
+        render();
+      })
+      .catch(err => {
+        statusEl.textContent = "Sorry — the lexicon could not load. (" + err.message + ")";
+      });
   </script>
 </body>
 </html>

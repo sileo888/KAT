@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Flash Cards — Study the Lexicon</title>
+
+  <style>
+    /* ============================================================
+       Same calm design as the lexicon. Words come from terms.json.
+       ============================================================ */
+    :root {
+      --paper:#f6f2ea; --paper-card:#fffdf8; --ink:#2c2a26; --ink-soft:#6f6a60;
+      --accent:#9a6a3c; --line:#e6dfd2; --shadow:0 1px 2px rgba(60,50,35,.05),0 8px 24px rgba(60,50,35,.06);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { --paper:#1c1a17; --paper-card:#262320; --ink:#ece7dd; --ink-soft:#a9a196;
+        --accent:#d0a271; --line:#38332c; --shadow:0 1px 2px rgba(0,0,0,.25),0 10px 28px rgba(0,0,0,.30); }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: var(--paper); color: var(--ink);
+      font-family: Georgia, "Iowan Old Style", "Palatino Linotype", Palatino, serif;
+      line-height: 1.65; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+    }
+    .wrap { max-width: 680px; margin: 0 auto; padding: 3.4vh 22px 12vh; }
+
+    /* ---- Top navigation ---- */
+    .nav { display: flex; gap: .4rem; justify-content: center; flex-wrap: wrap; margin-bottom: 2rem; }
+    .nav a {
+      text-decoration: none; color: var(--ink-soft); font-size: 1rem; padding: .4rem .85rem;
+      border-radius: 10px; border: 1px solid transparent; transition: color .15s ease, border-color .15s ease;
+    }
+    .nav a:hover { color: var(--accent); }
+    .nav a.here { color: var(--accent); border-color: var(--line); background: var(--paper-card); }
+
+    header { text-align: center; margin-bottom: 1.6rem; }
+    h1 { font-size: clamp(2rem, 6vw, 2.9rem); margin: 0 0 .4rem; font-weight: 600; }
+    .subtitle { color: var(--ink-soft); font-style: italic; margin: 0; font-size: clamp(1rem,2.4vw,1.12rem); }
+
+    button { font-family: inherit; cursor: pointer; }
+    .btn-primary { color:#fff; background: var(--accent); border:1px solid var(--accent); border-radius:12px; padding:.7rem 1.2rem; font-size:1rem; }
+    .btn-quiet { color: var(--ink-soft); background: transparent; border:1px solid var(--line); border-radius:12px; padding:.7rem 1.2rem; font-size:1rem; transition: color .15s ease, border-color .15s ease; }
+    .btn-quiet:hover { color: var(--accent); border-color: var(--accent); }
+
+    /* ---- Controls ---- */
+    .controls { display:flex; align-items:center; justify-content:space-between; gap:.8rem; flex-wrap:wrap; margin-bottom:1.3rem; }
+    .progress { font-size:1.05rem; color: var(--ink-soft); font-style: italic; }
+    .progress strong { color: var(--accent); font-style: normal; }
+    .control-btns { display:flex; gap:.5rem; flex-wrap:wrap; }
+    .control-btns .btn-quiet { padding:.5rem .85rem; font-size:.92rem; }
+
+    /* ---- The card ---- */
+    .fcard {
+      background: var(--paper-card); border:1px solid var(--line); border-radius:22px;
+      box-shadow: var(--shadow); padding: 2rem 1.9rem; min-height: 44vh;
+      display:flex; flex-direction:column; justify-content:center; gap:1rem;
+      cursor:pointer; user-select:none; -webkit-user-select:none;
+      transition: transform .12s ease, box-shadow .2s ease;
+    }
+    .fcard:active { transform: scale(.995); }
+    .fcard-face { max-height: 58vh; overflow-y: auto; }
+
+    .face-term {
+      text-align:center; font-size: clamp(1.9rem, 7vw, 3rem); font-weight:600;
+      letter-spacing:.04em; color: var(--accent); line-height:1.15;
+    }
+    .face-def { font-size: clamp(1.1rem, 2.8vw, 1.28rem); color: var(--ink); }
+    .face-def .definition { margin:0; }
+    .deflabel { font-variant: small-caps; letter-spacing:.03em; font-weight:700; color: var(--accent); }
+    .superseded { font-size:.92rem; color: var(--ink-soft); margin:.9rem 0 0; padding-top:.75rem; border-top:1px dashed var(--line); }
+    .sup-label { font-variant: small-caps; letter-spacing:.03em; font-weight:700; color: var(--ink-soft); }
+
+    .fcard-hint { text-align:center; color: var(--ink-soft); font-style:italic; font-size:.9rem; }
+
+    /* ---- Judge buttons ---- */
+    .judge { display:flex; gap:.8rem; margin-top:1.3rem; }
+    .judge button { flex:1; }
+
+    /* ---- Done ---- */
+    .done { text-align:center; padding:3rem 1rem; }
+    .done-msg { font-size:1.5rem; margin:0 0 1.4rem; }
+
+    .status { text-align:center; color: var(--ink-soft); font-style:italic; padding:3rem 0; }
+    footer { margin-top: 3rem; text-align:center; color: var(--ink-soft); font-size:.85rem; font-style:italic; }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <nav class="nav">
+      <a href="index.html">Home</a>
+      <a href="lexicon.html">Lexicon</a>
+      <a href="flashcards.html" class="here">Flash Cards</a>
+    </nav>
+
+    <header>
+      <h1>Flash Cards</h1>
+      <p class="subtitle">Tap a card to flip it</p>
+    </header>
+
+    <div id="app" hidden>
+      <div class="controls">
+        <div class="progress" id="progress"></div>
+        <div class="control-btns">
+          <button id="modeBtn" class="btn-quiet" type="button">Reverse practice: off</button>
+          <button id="restartBtn" class="btn-quiet" type="button">Restart</button>
+        </div>
+      </div>
+
+      <div id="card" class="fcard" role="button" tabindex="0" aria-label="Flash card. Tap or press Enter to flip.">
+        <div class="fcard-face" id="cardFace"></div>
+        <div class="fcard-hint" id="cardHint"></div>
+      </div>
+
+      <div class="judge">
+        <button id="againBtn" class="btn-quiet" type="button">Show me again</button>
+        <button id="knewBtn" class="btn-primary" type="button">I knew it</button>
+      </div>
+    </div>
+
+    <div id="done" class="done" hidden>
+      <p class="done-msg">🎉 You knew all <span id="doneTotal"></span> terms.</p>
+      <button id="goAgainBtn" class="btn-primary" type="button">Go again</button>
+    </div>
+
+    <p class="status" id="status">Loading the deck…</p>
+
+    <footer>Cards you mark “Show me again” keep coming back until every term is known.</footer>
+  </div>
+
+  <script src="shared.js"></script>
+  <script>
+    const appEl      = document.getElementById("app");
+    const doneEl     = document.getElementById("done");
+    const statusEl   = document.getElementById("status");
+    const progressEl = document.getElementById("progress");
+    const cardEl     = document.getElementById("card");
+    const faceEl     = document.getElementById("cardFace");
+    const hintEl     = document.getElementById("cardHint");
+    const modeBtn    = document.getElementById("modeBtn");
+    const restartBtn = document.getElementById("restartBtn");
+    const againBtn   = document.getElementById("againBtn");
+    const knewBtn    = document.getElementById("knewBtn");
+    const goAgainBtn = document.getElementById("goAgainBtn");
+    const doneTotal  = document.getElementById("doneTotal");
+
+    let all = [];            // every card
+    let roundQueue = [];     // cards still to show this round
+    let nextRound = [];      // cards marked "show me again"
+    let current = null;      // the card on screen
+    let flipped = false;     // is the answer showing?
+    let knownCount = 0;
+    let total = 0;
+    let reverse = false;     // reverse practice: definition first
+
+    function shuffle(a) {
+      a = [...a];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    function startSession() {
+      knownCount = 0;
+      nextRound = [];
+      roundQueue = shuffle(all);   // shuffle the deck each new session
+      doneEl.setAttribute("hidden", "");
+      appEl.removeAttribute("hidden");
+      showNext();
+    }
+
+    function showNext() {
+      if (roundQueue.length === 0) {
+        if (nextRound.length > 0) {
+          roundQueue = shuffle(nextRound);   // shuffle again each new round
+          nextRound = [];
+        } else {
+          return showDone();
+        }
+      }
+      current = roundQueue[0];
+      flipped = false;
+      renderCard();
+      updateProgress();
+    }
+
+    function renderCard() {
+      const t = current;
+      const termFace = '<div class="face-term">' + escapeHtml(t.term) + "</div>";
+      const defFace  = '<div class="face-def">' + definitionBlockHTML(t) + "</div>";
+
+      let showing, hint;
+      if (!reverse) {
+        showing = flipped ? defFace : termFace;
+        hint = flipped ? "tap to flip back" : "tap to see the meaning";
+      } else {
+        showing = flipped ? termFace : defFace;
+        hint = flipped ? "tap to flip back" : "tap to see the term";
+      }
+      faceEl.innerHTML = showing;
+      faceEl.scrollTop = 0;
+      hintEl.textContent = hint;
+    }
+
+    function flip() { flipped = !flipped; renderCard(); }
+
+    function updateProgress() {
+      progressEl.innerHTML = "<strong>" + knownCount + "</strong> of " + total + " known";
+    }
+
+    function showDone() {
+      appEl.setAttribute("hidden", "");
+      doneTotal.textContent = total;
+      doneEl.removeAttribute("hidden");
+    }
+
+    // ---- Flipping (touch + click + keyboard) ----
+    cardEl.addEventListener("click", flip);
+    cardEl.addEventListener("keydown", e => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); flip(); }
+    });
+
+    // ---- Judging ----
+    knewBtn.addEventListener("click", () => {
+      if (!current) return;
+      knownCount++;
+      roundQueue.shift();       // known -> gone from rotation
+      showNext();
+    });
+    againBtn.addEventListener("click", () => {
+      if (!current) return;
+      const c = roundQueue.shift();
+      nextRound.push(c);        // comes back in a later round
+      showNext();
+    });
+
+    // ---- Controls ----
+    modeBtn.addEventListener("click", () => {
+      reverse = !reverse;
+      modeBtn.textContent = "Reverse practice: " + (reverse ? "on" : "off");
+      flipped = false;
+      if (current) renderCard();
+    });
+    restartBtn.addEventListener("click", startSession);
+    goAgainBtn.addEventListener("click", startSession);
+
+    // ---- Load ----
+    loadTerms()
+      .then(terms => {
+        all = terms;
+        total = all.length;
+        statusEl.style.display = "none";
+        startSession();
+      })
+      .catch(err => {
+        statusEl.textContent = "Sorry — the deck could not load. (" + err.message + ")";
+      });
+  </script>
+</body>
+</html>
