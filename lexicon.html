@@ -52,7 +52,11 @@
     .subtitle { color: var(--ink-soft); font-size: clamp(1rem, 2.4vw, 1.15rem); font-style: italic; margin: 0; }
 
     /* ---- Search ---- */
-    .search-area { position: sticky; top: 0; z-index: 5; padding: 1.1rem 0 .6rem; background: linear-gradient(var(--paper) 78%, transparent); }
+    /* ---- Sticky top bar: search + A–Z, always in reach ---- */
+    .topbar {
+      position: sticky; top: 0; z-index: 5; background: var(--paper);
+      padding: 1rem 0 .55rem; box-shadow: 0 8px 14px -10px rgba(60,50,35,.35);
+    }
     #search {
       width: 100%; font-family: inherit; font-size: 1.15rem; color: var(--ink);
       background: var(--paper-card); border: 1px solid var(--line); border-radius: 14px;
@@ -61,25 +65,35 @@
     }
     #search::placeholder { color: var(--ink-soft); font-style: italic; }
     #search:focus { border-color: var(--accent); }
-    .count { text-align: center; color: var(--ink-soft); font-size: .9rem; font-style: italic; margin: .3rem 0 1rem; min-height: 1.2em; }
+    .count { text-align: center; color: var(--ink-soft); font-size: .9rem; font-style: italic; margin: .8rem 0 1.6rem; min-height: 1.2em; }
 
-    /* ---- A to Z jump row ---- */
-    .az { display: flex; flex-wrap: wrap; gap: .35rem; justify-content: center; margin: 0 0 2.2rem; }
+    /* ---- A to Z jump row: one compact, swipeable line ---- */
+    .az {
+      display: flex; flex-wrap: nowrap; overflow-x: auto; gap: .3rem; margin: .6rem 0 0;
+      padding-bottom: .15rem; -webkit-overflow-scrolling: touch; scrollbar-width: thin;
+    }
+    .az::-webkit-scrollbar { height: 4px; }
+    .az::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }
     .az-letter {
-      font-family: inherit; font-size: .95rem; color: var(--ink-soft); background: var(--paper-card);
-      border: 1px solid var(--line); border-radius: 9px; min-width: 2rem; padding: .32rem .2rem;
-      cursor: pointer; transition: color .15s ease, border-color .15s ease;
+      flex: 0 0 auto; font-family: inherit; font-size: .92rem; color: var(--ink-soft);
+      background: var(--paper-card); border: 1px solid var(--line); border-radius: 9px;
+      min-width: 1.9rem; padding: .3rem .2rem; cursor: pointer;
+      transition: color .15s ease, border-color .15s ease;
     }
     .az-letter:hover { color: var(--accent); border-color: var(--accent); }
 
     /* ---- Cards ---- */
     .card {
       background: var(--paper-card); border: 1px solid var(--line); border-radius: 18px;
-      padding: 1.7rem 1.8rem; margin: 0 0 1.15rem; box-shadow: var(--shadow); scroll-margin-top: 96px;
+      padding: 1.7rem 1.8rem; margin: 0 0 1.15rem; box-shadow: var(--shadow); scroll-margin-top: 132px;
     }
     .term { font-size: clamp(1.5rem, 4vw, 2rem); font-weight: 600; letter-spacing: .04em; margin: 0 0 .55rem; color: var(--accent); }
     .definition { font-size: clamp(1.08rem, 2.6vw, 1.22rem); color: var(--ink); margin: 0; }
     .deflabel { font-variant: small-caps; letter-spacing: .03em; font-weight: 700; color: var(--accent); }
+
+    /* ---- Editorial lines: source notes and flags, quieter than the definition ---- */
+    .defsource, .defflag { display: block; font-size: .82rem; line-height: 1.5; color: var(--ink-soft); margin-top: .6rem; }
+    .defsource { font-style: italic; }
 
     /* ---- Superseded original (kept, never deleted) ---- */
     .superseded {
@@ -143,13 +157,12 @@
       <p class="subtitle">A vocabulary of key terms</p>
     </header>
 
-    <div class="search-area">
+    <div class="topbar">
       <input id="search" type="search" placeholder="Search a term or a word in its meaning…"
              autocomplete="off" aria-label="Search the lexicon" />
+      <nav class="az" id="az" aria-label="Jump to a letter"></nav>
     </div>
     <div class="count" id="count"></div>
-
-    <nav class="az" id="az" aria-label="Jump to a letter"></nav>
 
     <main id="cards"></main>
     <p class="empty" id="empty">No entries match your search.</p>
@@ -181,7 +194,7 @@
     function buildAZ() {
       letters = []; firstIndex = {};
       sorted.forEach((e, i) => {
-        const L = e.term.trim().charAt(0).toUpperCase();
+        const L = sortKey(e.term).charAt(0).toUpperCase();
         if (!(L in firstIndex)) { firstIndex[L] = i; letters.push(L); }
       });
       azEl.innerHTML = letters

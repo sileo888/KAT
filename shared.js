@@ -45,11 +45,19 @@ function currentDefinition(t) {
   return hasCorrection(t) ? t.corrected : t.original;
 }
 
+/* Editorial lines that are part of the text but shown smaller and quieter:
+   a trailing "(Source: …)" note, and any "[FLAG: …]" / "[FENCE: …]" marker. */
+function styleMeta(html) {
+  html = html.replace(/\[(?:FLAG|FENCE):[^\]]*\]/g, m => '<span class="defflag">' + m + "</span>");
+  html = html.replace(/\(Source:[^)]*\)\s*$/, m => '<span class="defsource">' + m + "</span>");
+  return html;
+}
+
 /* Turn a raw definition string into safe, label-styled HTML.
    An optional `decorate` step (e.g. search highlighting) runs first. */
 function definitionText(text, decorate) {
   const step = decorate || (s => s);
-  return styleLabels(step(escapeHtml(String(text))));
+  return styleMeta(styleLabels(step(escapeHtml(String(text)))));
 }
 
 /* Build the definition block for a card.
@@ -74,9 +82,14 @@ function definitionBlockHTML(t, decorate) {
   return '<p class="definition">' + definitionText(t.original, decorate) + "</p>";
 }
 
-/* Alphabetical order by term, for calm predictable reading. */
+/* Sort key: alphabetise ignoring a leading "THE ". */
+function sortKey(term) {
+  return String(term).replace(/^THE\s+/i, "").trim();
+}
+
+/* Alphabetical order by term (ignoring a leading "THE"), for calm reading. */
 function sortTerms(terms) {
-  return [...terms].sort((a, b) => a.term.localeCompare(b.term));
+  return [...terms].sort((a, b) => sortKey(a.term).localeCompare(sortKey(b.term)));
 }
 
 /* Today's date as YYYY-MM-DD, for drafting corrections. */
