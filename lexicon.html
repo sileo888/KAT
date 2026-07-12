@@ -56,7 +56,7 @@
     }
 
     /* ---- Header ---- */
-    header { text-align: center; margin-bottom: 2.6rem; }
+    header { text-align: center; margin-bottom: 2.2rem; }
 
     h1 {
       font-size: clamp(2.1rem, 6vw, 3.1rem);
@@ -74,7 +74,7 @@
     }
 
     /* ---- Search ---- */
-    .search-area { position: sticky; top: 0; z-index: 5; padding: 1.2rem 0; background: linear-gradient(var(--paper) 72%, transparent); }
+    .search-area { position: sticky; top: 0; z-index: 5; padding: 1.2rem 0 .6rem; background: linear-gradient(var(--paper) 78%, transparent); }
 
     #search {
       width: 100%;
@@ -97,9 +97,31 @@
       color: var(--ink-soft);
       font-size: .9rem;
       font-style: italic;
-      margin: .4rem 0 1.8rem;
+      margin: .3rem 0 1rem;
       min-height: 1.2em;
     }
+
+    /* ---- A to Z jump row ---- */
+    .az {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .35rem;
+      justify-content: center;
+      margin: 0 0 2.2rem;
+    }
+    .az-letter {
+      font-family: inherit;
+      font-size: .95rem;
+      color: var(--ink-soft);
+      background: var(--paper-card);
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      min-width: 2rem;
+      padding: .32rem .2rem;
+      cursor: pointer;
+      transition: color .15s ease, border-color .15s ease;
+    }
+    .az-letter:hover { color: var(--accent); border-color: var(--accent); }
 
     /* ---- Cards ---- */
     .card {
@@ -109,6 +131,7 @@
       padding: 1.7rem 1.8rem;
       margin: 0 0 1.15rem;
       box-shadow: var(--shadow);
+      scroll-margin-top: 96px;   /* so jumps land clear of the search bar */
     }
 
     .term {
@@ -123,6 +146,14 @@
       font-size: clamp(1.08rem, 2.6vw, 1.22rem);
       color: var(--ink);
       margin: 0;
+    }
+
+    /* Subtle styling for labeled parts (Root / KAT reading / …) */
+    .deflabel {
+      font-variant: small-caps;
+      letter-spacing: .03em;
+      font-weight: 700;
+      color: var(--accent);
     }
 
     mark { background: rgba(154,106,60,.22); color: inherit; border-radius: 3px; padding: 0 .1em; }
@@ -158,6 +189,8 @@
     </div>
     <div class="count" id="count"></div>
 
+    <nav class="az" id="az" aria-label="Jump to a letter"></nav>
+
     <main id="cards"></main>
     <p class="empty" id="empty">No entries match your search.</p>
 
@@ -175,53 +208,172 @@
 
            {
              term: "WORD",
-             definition: "The meaning goes here."
+             definition: `The meaning goes here.`
            },
+
+       Note the definition is wrapped in back-ticks ` ` (the key just
+       left of the 1 key), NOT normal quotes. Back-ticks let a meaning
+       safely contain quotation marks like "this" and apostrophes.
 
        TO ADD A NEW WORD:
          1. Copy one whole block (from the { to the },  including the comma).
          2. Paste it into the list below.
          3. Change the WORD and the meaning.
-         4. Keep the quotation marks " " around both.
+         4. Keep the " " around the WORD and the ` ` around the meaning.
 
        (Or just ask in plain English — "add the word X meaning Y" —
         and it will be placed here for you.)
 
-       Tip: the list is kept in alphabetical order, but the page will
-       work fine even if it isn't.
+       The page automatically alphabetises the list and rebuilds the
+       A–Z jump row, so you never have to worry about placement.
        ============================================================ -->
 
   <script>
     const ENTRIES = [
 
       {
+        term: "ANOTHEN",
+        definition: `"From above."`
+      },
+
+      {
+        term: "APOKATASTASIS",
+        definition: `(Acts 3:21) A critical reality-establisher: the restoration of all things — receiver repair at creation scale.`
+      },
+
+      {
         term: "BAPTISM",
-        definition: "Immersion in sustained prayer-sound, not physical water."
+        definition: `Immersion in the sound of sustained prayer — not physical water.`
+      },
+
+      {
+        term: "GINOSKO",
+        definition: `Intimate communion; being known. "I never knew you" = "we never had intimate communion."`
+      },
+
+      {
+        term: "ICE SKATING PRAYER",
+        definition: `The effortless extension of what is already true — the book's most practical tool.`
+      },
+
+      {
+        term: "KOLASIS",
+        definition: `Pruning — restorative, not torture.`
+      },
+
+      {
+        term: "LIGHT / DARKNESS",
+        definition: `Epistemic, not moral. Light = known and manifest things; darkness = hidden things. 2 Corinthians 4:6 fuses light with the water-flood imagery through Habakkuk 2:14's phrase — "the knowledge of the glory."`
+      },
+
+      {
+        term: "MERCY",
+        definition: `Root: Latin mercēs, "wages, price," from merx, "goods" — the same family as merchant, commerce, market. Rooted in exchange; the Christian development made it the gift to those from whom no requital can be expected — the exchange that dissolves the ledger. KAT reading: MERCY = "I in you and you in me" — the exchange perfected into oneness. Anchor: the Mercy Seat (Hebrew kapporeth; Exodus 25:22, "there I will meet with you") — mercy named as the meeting-place of the presence, made architectural. Kosmos reception: mercy = "you deserve a thumping but I'll withhold it" — judgment management; the symptom of a world that missed oneness.`
+      },
+
+      {
+        term: "METANOIA",
+        definition: `Going beyond the mind of man into the mind of Christ.`
+      },
+
+      {
+        term: "NAOS / TEMPLE",
+        definition: `The nervous system as antenna — the receiver.`
+      },
+
+      {
+        term: "NARROW GATE / THLIBO",
+        definition: `The internal olive press extracting the oil.`
       },
 
       {
         term: "OIL",
-        definition: "Intimacy; being fully known; the olive crushed to yield a categorically different substance."
+        definition: `Intimacy specifically — not mere presence. Ginosko; being known. The olive dies to itself to yield a categorically different substance — real transformation through death and crushing. The crushing (thlipsis) presses out the oil. The ten virgins: oil is necessary but not sufficient.`
+      },
+
+      {
+        term: "OPERATING FROM THE HEAVENLY REALITY",
+        definition: `The ongoing cyclical movement mastered by "Prophets at the Gate."`
+      },
+
+      {
+        term: "PALINGENESIA",
+        definition: `(Matthew 19:28; Titus 3:5) A critical reality-establisher: restoration and new birth fused in one word.`
+      },
+
+      {
+        term: "PTOCHOS",
+        definition: `Spiritual bankruptcy; with kenosis, the entry point into metanoia.`
+      },
+
+      {
+        term: "REALITY",
+        definition: `The neutral idea-to-thing process — not only the true actualization. Two forms: the one Heavenly Reality (true actualization) versus countless shifting Kosmos realities — shared hallucinations believed into "worlds," millions of shifting shades and shadows, subcultural worlds people move between across a life. The shifting quality is itself diagnostic of the Kosmos: the real thing does not shift.`
+      },
+
+      {
+        term: "REBORN",
+        definition: `A one-time, unmistakable threshold — the end of spectatorship. Framed as promise, not verdict.`
+      },
+
+      {
+        term: "SANDPAPER PRAYER",
+        definition: `Kosmos striving; coercion.`
       },
 
       {
         term: "SEA",
-        definition: "The Kosmos, the false collective perception, in liquid form."
+        definition: `The beast — the Kosmos in liquid form. Habakkuk 2:14: the saturating presence drowning the beast.`
       },
 
       {
         term: "SIN",
-        definition: "Hamartia, “missing the mark”; the mark is the Highest Point."
+        definition: `Root: Greek hamartia, "to miss the mark" — an archery term; Hebrew chata, likewise "to miss." Sin at root is a miss, not a crime. KAT reading: the mark is the Highest Point of heaven; sin is the aim going sideways — toward the False Summits, the Kosmos — instead of up to the Gate. Kosmos reception: "sin" = wrong behavior — but behavior is the downstream symptom of the miss, not the miss itself.`
+      },
+
+      {
+        term: "SINGLE EYE",
+        definition: `Observer and observed merge.`
+      },
+
+      {
+        term: "SON OF GOD",
+        definition: `A healed, active vessel who participates in the divine nature rather than spectating.`
       },
 
       {
         term: "TENDER MERCY",
-        definition: "Exchange dissolved into oneness; womb-compassion; “I in you and you in me.” Always written as TENDER MERCY."
+        definition: `Always written TENDER MERCY, never bare "mercy" — the reinforce-by-renaming device. Root: Hebrew rachamim, from rechem = womb — womb-compassion, a mother's cherishing of the child within her: the most literal "I in you and you in me" image. "Tender mercies" appears about ten times in the Psalms, plus Proverbs 12:10; in the NT, Luke 1:78 and James 5:11. Two roots converge — mercēs (exchange perfected into oneness) and rachamim (womb, tender union) — and both flee the courtroom.`
+      },
+
+      {
+        term: "TESTING",
+        definition: `The same pressure as thlipsis, leaned on hard — testing, discipline, suffering. Kept as its own entry for now.`
+      },
+
+      {
+        term: "THE ONLY PRAYER",
+        definition: `Declaring God's presence to all creation; it triggers the Wind.`
+      },
+
+      {
+        term: "THLIPSIS",
+        definition: `The pressure. The Kosmos's neediness pressing you to believe in it — the inner olive press. Leaned on hard enough, it becomes testing, discipline, suffering. The press is what extracts the oil.`
+      },
+
+      {
+        term: "ULTRACONFIDENCE",
+        definition: `The result of the validation complex.`
+      },
+
+      {
+        term: "VALIDATION COMPLEX",
+        definition: `The Breath (physical, involuntary) plus the Resonance (inner conviction) — dual haptic feedback, used as a diagnostic.`
       },
 
       {
         term: "WATER",
-        definition: "God’s saturating presence at a concentration that cannot be ignored."
+        definition: `Saturating presence — presence at a concentration that cannot be ignored. Flood-stage versus ambient humidity.`
       }
 
     ];
@@ -229,7 +381,8 @@
 
 
   <!-- ============================================================
-       The engine below draws the cards and runs the search.
+       The engine below draws the cards, styles the labels, builds
+       the A–Z row, and runs the search.
        You do not need to change anything here.
        ============================================================ -->
   <script>
@@ -237,9 +390,30 @@
     const emptyEl = document.getElementById("empty");
     const countEl = document.getElementById("count");
     const searchEl = document.getElementById("search");
+    const azEl = document.getElementById("az");
 
     // Keep entries alphabetical by term for calm, predictable reading.
     const sorted = [...ENTRIES].sort((a, b) => a.term.localeCompare(b.term));
+
+    // Work out which first-letters exist, and the first card for each.
+    const letters = [];
+    const firstIndex = {};
+    sorted.forEach((e, i) => {
+      const L = e.term.trim().charAt(0).toUpperCase();
+      if (!(L in firstIndex)) { firstIndex[L] = i; letters.push(L); }
+    });
+
+    // Build the A–Z jump row.
+    azEl.innerHTML = letters
+      .map(L => '<button class="az-letter" type="button" data-letter="' + L + '">' + L + "</button>")
+      .join("");
+
+    azEl.addEventListener("click", e => {
+      const btn = e.target.closest(".az-letter");
+      if (!btn) return;
+      const card = document.getElementById("term-" + firstIndex[btn.dataset.letter]);
+      if (card) card.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
 
     function escapeHtml(s) {
       return s.replace(/[&<>"']/g, c => (
@@ -247,9 +421,15 @@
       ));
     }
 
+    // Labelled parts that appear inside some definitions.
+    const LABELS = ["Root:", "KAT reading:", "Kosmos reception:", "Anchor:"];
+    function styleLabels(html) {
+      LABELS.forEach(l => { html = html.split(l).join('<span class="deflabel">' + l + "</span>"); });
+      return html;
+    }
+
     // Wrap the matching part of text in <mark> so searches highlight.
-    function highlight(text, query) {
-      const safe = escapeHtml(text);
+    function markQuery(safe, query) {
       if (!query) return safe;
       const q = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       return safe.replace(new RegExp("(" + q + ")", "gi"), "<mark>$1</mark>");
@@ -260,20 +440,22 @@
       let shown = 0;
       cardsEl.innerHTML = "";
 
-      sorted.forEach(entry => {
+      sorted.forEach((entry, i) => {
         const hay = (entry.term + " " + entry.definition).toLowerCase();
         if (q && !hay.includes(q)) return;
         shown++;
 
         const card = document.createElement("article");
         card.className = "card";
+        card.id = "term-" + i;
         card.innerHTML =
-          '<h2 class="term">' + highlight(entry.term, query) + "</h2>" +
-          '<p class="definition">' + highlight(entry.definition, query) + "</p>";
+          '<h2 class="term">' + markQuery(escapeHtml(entry.term), query) + "</h2>" +
+          '<p class="definition">' + styleLabels(markQuery(escapeHtml(entry.definition), query)) + "</p>";
         cardsEl.appendChild(card);
       });
 
       emptyEl.style.display = shown === 0 ? "block" : "none";
+      azEl.style.display = q ? "none" : "flex";   // hide the jump row while searching
 
       const total = sorted.length;
       countEl.textContent = q
