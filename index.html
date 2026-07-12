@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Study Tools</title>
+  <style>
+    :root {
+      --paper:#f6f2ea; --paper-card:#fffdf8; --ink:#2c2a26; --ink-soft:#6f6a60;
+      --accent:#9a6a3c; --line:#e6dfd2; --shadow:0 1px 2px rgba(60,50,35,.05),0 8px 24px rgba(60,50,35,.06);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { --paper:#1c1a17; --paper-card:#262320; --ink:#ece7dd; --ink-soft:#a9a196;
+        --accent:#d0a271; --line:#38332c; --shadow:0 1px 2px rgba(0,0,0,.25),0 10px 28px rgba(0,0,0,.30); }
+    }
+    * { box-sizing:border-box; }
+    body {
+      margin:0; background:var(--paper); color:var(--ink);
+      font-family:Georgia,"Iowan Old Style","Palatino Linotype",Palatino,serif;
+      line-height:1.65; -webkit-font-smoothing:antialiased;
+      display:flex; min-height:100vh; align-items:center; justify-content:center;
+    }
+    .wrap { max-width:620px; padding:8vh 24px; width:100%; }
+    header { text-align:center; margin-bottom:2.6rem; }
+    h1 { font-size:clamp(2.1rem,6vw,3rem); margin:0 0 .5rem; font-weight:600; }
+    .subtitle { color:var(--ink-soft); font-style:italic; margin:0; font-size:1.1rem; }
+    a.tool {
+      display:block; text-decoration:none; color:var(--ink);
+      background:var(--paper-card); border:1px solid var(--line); border-radius:18px;
+      padding:1.5rem 1.7rem; margin-bottom:1.1rem; box-shadow:var(--shadow);
+      transition:border-color .18s ease, transform .18s ease;
+    }
+    a.tool:hover { border-color:var(--accent); transform:translateY(-2px); }
+    .tool-name { font-size:1.5rem; font-weight:600; color:var(--accent); margin:0 0 .3rem; }
+    .tool-desc { color:var(--ink-soft); margin:0; font-size:1.05rem; }
+    footer { margin-top:3rem; text-align:center; color:var(--ink-soft); font-size:.85rem; font-style:italic; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Study Tools</h1>
+      <p class="subtitle">A growing set of study aids for the book project</p>
+    </header>
+
+    <!-- Each study tool gets one link-card here. Add more as the project grows. -->
+    <a class="tool" href="lexicon.html">
+      <p class="tool-name">Lexicon</p>
+      <p class="tool-desc">A searchable vocabulary of key terms.</p>
+    </a>
+
+    <footer>More tools will appear here over time.</footer>
+  </div>
+</body>
+</html>

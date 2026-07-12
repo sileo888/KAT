@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lexicon — A Vocabulary of Key Terms</title>
+
+  <style>
+    /* ============================================================
+       CALM STUDY-PAGE DESIGN
+       You normally never need to touch this style section.
+       To add or change WORDS, scroll all the way down to the part
+       that says  "THE LEXICON ENTRIES".
+       ============================================================ */
+
+    :root {
+      --paper:      #f6f2ea;   /* soft warm background */
+      --paper-card: #fffdf8;   /* card background      */
+      --ink:        #2c2a26;   /* main text            */
+      --ink-soft:   #6f6a60;   /* quieter text         */
+      --accent:     #9a6a3c;   /* warm brown accent    */
+      --line:       #e6dfd2;   /* hairline borders     */
+      --shadow:     0 1px 2px rgba(60,50,35,.05), 0 8px 24px rgba(60,50,35,.06);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --paper:      #1c1a17;
+        --paper-card: #262320;
+        --ink:        #ece7dd;
+        --ink-soft:   #a9a196;
+        --accent:     #d0a271;
+        --line:       #38332c;
+        --shadow:     0 1px 2px rgba(0,0,0,.25), 0 10px 28px rgba(0,0,0,.30);
+      }
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: Georgia, "Iowan Old Style", "Palatino Linotype", Palatino, serif;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    .wrap {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 7vh 22px 14vh;
+    }
+
+    /* ---- Header ---- */
+    header { text-align: center; margin-bottom: 2.6rem; }
+
+    h1 {
+      font-size: clamp(2.1rem, 6vw, 3.1rem);
+      line-height: 1.1;
+      letter-spacing: .01em;
+      margin: 0 0 .5rem;
+      font-weight: 600;
+    }
+
+    .subtitle {
+      color: var(--ink-soft);
+      font-size: clamp(1rem, 2.4vw, 1.15rem);
+      font-style: italic;
+      margin: 0;
+    }
+
+    /* ---- Search ---- */
+    .search-area { position: sticky; top: 0; z-index: 5; padding: 1.2rem 0; background: linear-gradient(var(--paper) 72%, transparent); }
+
+    #search {
+      width: 100%;
+      font-family: inherit;
+      font-size: 1.15rem;
+      color: var(--ink);
+      background: var(--paper-card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: .95rem 1.15rem;
+      box-shadow: var(--shadow);
+      outline: none;
+      transition: border-color .18s ease, box-shadow .18s ease;
+    }
+    #search::placeholder { color: var(--ink-soft); font-style: italic; }
+    #search:focus { border-color: var(--accent); }
+
+    .count {
+      text-align: center;
+      color: var(--ink-soft);
+      font-size: .9rem;
+      font-style: italic;
+      margin: .4rem 0 1.8rem;
+      min-height: 1.2em;
+    }
+
+    /* ---- Cards ---- */
+    .card {
+      background: var(--paper-card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 1.7rem 1.8rem;
+      margin: 0 0 1.15rem;
+      box-shadow: var(--shadow);
+    }
+
+    .term {
+      font-size: clamp(1.5rem, 4vw, 2rem);
+      font-weight: 600;
+      letter-spacing: .04em;
+      margin: 0 0 .55rem;
+      color: var(--accent);
+    }
+
+    .definition {
+      font-size: clamp(1.08rem, 2.6vw, 1.22rem);
+      color: var(--ink);
+      margin: 0;
+    }
+
+    mark { background: rgba(154,106,60,.22); color: inherit; border-radius: 3px; padding: 0 .1em; }
+
+    .empty {
+      text-align: center;
+      color: var(--ink-soft);
+      font-style: italic;
+      padding: 2rem 0;
+      display: none;
+    }
+
+    footer {
+      margin-top: 4rem;
+      text-align: center;
+      color: var(--ink-soft);
+      font-size: .85rem;
+      font-style: italic;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Lexicon</h1>
+      <p class="subtitle">A vocabulary of key terms</p>
+    </header>
+
+    <div class="search-area">
+      <input id="search" type="search" placeholder="Search a term or a word in its meaning…"
+             autocomplete="off" aria-label="Search the lexicon" />
+    </div>
+    <div class="count" id="count"></div>
+
+    <main id="cards"></main>
+    <p class="empty" id="empty">No entries match your search.</p>
+
+    <footer>Study lexicon · terms are kept in alphabetical order for easy reading.</footer>
+  </div>
+
+
+  <!-- ============================================================
+       THE LEXICON ENTRIES
+       ============================================================
+
+       This is the ONLY part you need to touch to add new words.
+
+       Each entry looks like this:
+
+           {
+             term: "WORD",
+             definition: "The meaning goes here."
+           },
+
+       TO ADD A NEW WORD:
+         1. Copy one whole block (from the { to the },  including the comma).
+         2. Paste it into the list below.
+         3. Change the WORD and the meaning.
+         4. Keep the quotation marks " " around both.
+
+       (Or just ask in plain English — "add the word X meaning Y" —
+        and it will be placed here for you.)
+
+       Tip: the list is kept in alphabetical order, but the page will
+       work fine even if it isn't.
+       ============================================================ -->
+
+  <script>
+    const ENTRIES = [
+
+      {
+        term: "OIL",
+        definition: "Intimacy; being fully known; the olive crushed to yield a categorically different substance."
+      },
+
+      {
+        term: "SEA",
+        definition: "The Kosmos, the false collective perception, in liquid form."
+      },
+
+      {
+        term: "SIN",
+        definition: "Hamartia, “missing the mark”; the mark is the Highest Point."
+      },
+
+      {
+        term: "TENDER MERCY",
+        definition: "Exchange dissolved into oneness; womb-compassion; “I in you and you in me.” Always written as TENDER MERCY."
+      },
+
+      {
+        term: "WATER",
+        definition: "God’s saturating presence at a concentration that cannot be ignored."
+      }
+
+    ];
+  </script>
+
+
+  <!-- ============================================================
+       The engine below draws the cards and runs the search.
+       You do not need to change anything here.
+       ============================================================ -->
+  <script>
+    const cardsEl = document.getElementById("cards");
+    const emptyEl = document.getElementById("empty");
+    const countEl = document.getElementById("count");
+    const searchEl = document.getElementById("search");
+
+    // Keep entries alphabetical by term for calm, predictable reading.
+    const sorted = [...ENTRIES].sort((a, b) => a.term.localeCompare(b.term));
+
+    function escapeHtml(s) {
+      return s.replace(/[&<>"']/g, c => (
+        { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]
+      ));
+    }
+
+    // Wrap the matching part of text in <mark> so searches highlight.
+    function highlight(text, query) {
+      const safe = escapeHtml(text);
+      if (!query) return safe;
+      const q = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      return safe.replace(new RegExp("(" + q + ")", "gi"), "<mark>$1</mark>");
+    }
+
+    function render(query = "") {
+      const q = query.trim().toLowerCase();
+      let shown = 0;
+      cardsEl.innerHTML = "";
+
+      sorted.forEach(entry => {
+        const hay = (entry.term + " " + entry.definition).toLowerCase();
+        if (q && !hay.includes(q)) return;
+        shown++;
+
+        const card = document.createElement("article");
+        card.className = "card";
+        card.innerHTML =
+          '<h2 class="term">' + highlight(entry.term, query) + "</h2>" +
+          '<p class="definition">' + highlight(entry.definition, query) + "</p>";
+        cardsEl.appendChild(card);
+      });
+
+      emptyEl.style.display = shown === 0 ? "block" : "none";
+
+      const total = sorted.length;
+      countEl.textContent = q
+        ? shown + " of " + total + " term" + (total === 1 ? "" : "s")
+        : total + " term" + (total === 1 ? "" : "s");
+    }
+
+    searchEl.addEventListener("input", e => render(e.target.value));
+    render();
+  </script>
+</body>
+</html>
