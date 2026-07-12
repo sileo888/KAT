@@ -82,10 +82,26 @@
     }
     .az-letter:hover { color: var(--accent); border-color: var(--accent); }
 
+    /* ---- Category filter chips (the book's order of motion) ---- */
+    .chips {
+      display: flex; flex-wrap: nowrap; overflow-x: auto; gap: .4rem; margin: .7rem 0 0;
+      padding-bottom: .15rem; -webkit-overflow-scrolling: touch; scrollbar-width: thin;
+    }
+    .chips::-webkit-scrollbar { height: 4px; }
+    .chips::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }
+    .chip {
+      flex: 0 0 auto; font-family: inherit; font-size: .9rem; color: var(--ink-soft);
+      background: var(--paper-card); border: 1px solid var(--line); border-radius: 999px;
+      padding: .42rem .95rem; cursor: pointer; white-space: nowrap;
+      transition: color .15s ease, border-color .15s ease, background .15s ease;
+    }
+    .chip:hover { color: var(--accent); border-color: var(--accent); }
+    .chip.active { color: #fff; background: var(--accent); border-color: var(--accent); }
+
     /* ---- Cards ---- */
     .card {
       background: var(--paper-card); border: 1px solid var(--line); border-radius: 18px;
-      padding: 1.7rem 1.8rem; margin: 0 0 1.15rem; box-shadow: var(--shadow); scroll-margin-top: 132px;
+      padding: 1.7rem 1.8rem; margin: 0 0 1.15rem; box-shadow: var(--shadow); scroll-margin-top: 188px;
     }
     .term { font-size: clamp(1.5rem, 4vw, 2rem); font-weight: 600; letter-spacing: .04em; margin: 0 0 .55rem; color: var(--accent); }
     .definition { font-size: clamp(1.08rem, 2.6vw, 1.22rem); color: var(--ink); margin: 0; }
@@ -160,6 +176,7 @@
     <div class="topbar">
       <input id="search" type="search" placeholder="Search a term or a word in its meaning…"
              autocomplete="off" aria-label="Search the lexicon" />
+      <nav class="chips" id="chips" aria-label="Filter by category"></nav>
       <nav class="az" id="az" aria-label="Jump to a letter"></nav>
     </div>
     <div class="count" id="count"></div>
@@ -178,11 +195,12 @@
     const countEl  = document.getElementById("count");
     const searchEl = document.getElementById("search");
     const azEl     = document.getElementById("az");
+    const chipsEl  = document.getElementById("chips");
     const statusEl = document.getElementById("status");
 
     let sorted = [];
-    let letters = [];
     let firstIndex = {};
+    let activeCat = "all";
 
     function markQuery(safe, query) {
       if (!query) return safe;
@@ -191,16 +209,24 @@
     }
     function termHTML(term, query) { return markQuery(escapeHtml(term), query); }
 
-    function buildAZ() {
-      letters = []; firstIndex = {};
-      sorted.forEach((e, i) => {
-        const L = sortKey(e.term).charAt(0).toUpperCase();
-        if (!(L in firstIndex)) { firstIndex[L] = i; letters.push(L); }
-      });
-      azEl.innerHTML = letters
-        .map(L => '<button class="az-letter" type="button" data-letter="' + L + '">' + L + "</button>")
-        .join("");
+    // Filter chips: All + the six categories in the book's order.
+    function buildChips() {
+      const chips = [{ label: "All", value: "all" }]
+        .concat(CATEGORY_ORDER.map(c => ({ label: c, value: c })));
+      chipsEl.innerHTML = chips.map(c =>
+        '<button class="chip' + (c.value === activeCat ? " active" : "") +
+        '" type="button" data-cat="' + escapeHtml(c.value) + '">' + escapeHtml(c.label) + "</button>"
+      ).join("");
     }
+
+    chipsEl.addEventListener("click", e => {
+      const btn = e.target.closest(".chip");
+      if (!btn) return;
+      activeCat = btn.dataset.cat;
+      [...chipsEl.children].forEach(ch => ch.classList.toggle("active", ch.dataset.cat === activeCat));
+      render(searchEl.value);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
 
     azEl.addEventListener("click", e => {
       const btn = e.target.closest(".az-letter");
@@ -213,12 +239,18 @@
       const q = query.trim().toLowerCase();
       const decorate = safe => markQuery(safe, query);
       let shown = 0;
+      firstIndex = {};
+      const lettersSeen = [];
       cardsEl.innerHTML = "";
 
       sorted.forEach((t, i) => {
+        if (activeCat !== "all" && t.category !== activeCat) return;
         const hay = (t.term + " " + t.original + " " + (t.corrected || "")).toLowerCase();
         if (q && !hay.includes(q)) return;
         shown++;
+
+        const L = sortKey(t.term).charAt(0).toUpperCase();
+        if (!(L in firstIndex)) { firstIndex[L] = i; lettersSeen.push(L); }
 
         const card = document.createElement("article");
         card.className = "card";
@@ -250,12 +282,21 @@
       });
 
       emptyEl.style.display = shown === 0 ? "block" : "none";
-      azEl.style.display = q ? "none" : "flex";
 
-      const total = sorted.length;
-      countEl.textContent = q
-        ? shown + " of " + total + " term" + (total === 1 ? "" : "s")
-        : total + " term" + (total === 1 ? "" : "s");
+      // A–Z reflects the currently visible set; shown when browsing (no text search).
+      const showAZ = !q && shown > 1;
+      azEl.style.display = showAZ ? "flex" : "none";
+      if (showAZ) {
+        azEl.innerHTML = lettersSeen
+          .map(L => '<button class="az-letter" type="button" data-letter="' + L + '">' + L + "</button>")
+          .join("");
+      }
+
+      const base = sorted.length;
+      const filtering = q || activeCat !== "all";
+      countEl.textContent = filtering
+        ? shown + " of " + base + " term" + (base === 1 ? "" : "s")
+        : base + " term" + (base === 1 ? "" : "s");
     }
 
     // Correction tool — all buttons handled here by delegation.
@@ -310,7 +351,7 @@
       .then(terms => {
         sorted = sortTerms(terms);
         statusEl.style.display = "none";
-        buildAZ();
+        buildChips();
         render();
       })
       .catch(err => {

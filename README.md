@@ -22,6 +22,7 @@ Every word is stored once, in `terms.json`. Each entry looks like this:
 ```json
 {
   "term": "WATER",
+  "category": "The Saturation",
   "original": "Saturating presence — presence at a concentration that cannot be ignored. Flood-stage versus ambient humidity.",
   "corrected": null,
   "correctedDate": null
@@ -31,6 +32,13 @@ Every word is stored once, in `terms.json`. Each entry looks like this:
 - **`original`** — the first wording. Once written, it is never changed.
 - **`corrected`** — a newer wording, added only when a term is corrected.
 - **`correctedDate`** — the date that correction was made.
+- **`category`** — which part of the book's motion the term belongs to
+  (The Two Realities, The Receiver, The Turn, The Summit, The Saturation,
+  The Descent). The lexicon filters by these; the flash cards can study one.
+
+**Removed terms are never deleted.** If a term is retired, its record stays in
+the file marked `"removed": true` (with a `removedDate` and `removedReason`),
+and it simply stops appearing on any page — kept for the record, never shown.
 
 When a term has a correction, both pages show the **corrected** wording as the
 main text, and keep the **original** below it in smaller, quieter text marked

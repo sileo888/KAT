@@ -15,8 +15,19 @@ async function loadTerms() {
   const res = await fetch("terms.json", { cache: "no-store" });
   if (!res.ok) throw new Error("Could not load terms.json (" + res.status + ")");
   const data = await res.json();
-  return data.terms;
+  // Removed entries are kept in the file (never silently deleted) but never displayed.
+  return data.terms.filter(t => !t.removed);
 }
+
+/* The categories, in the book's order of motion (not alphabetical). */
+const CATEGORY_ORDER = [
+  "The Two Realities",
+  "The Receiver",
+  "The Turn",
+  "The Summit",
+  "The Saturation",
+  "The Descent",
+];
 
 /* Make text safe to place inside the page. */
 function escapeHtml(s) {

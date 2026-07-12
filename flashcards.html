@@ -43,6 +43,22 @@
     .btn-quiet { color: var(--ink-soft); background: transparent; border:1px solid var(--line); border-radius:12px; padding:.7rem 1.2rem; font-size:1rem; transition: color .15s ease, border-color .15s ease; }
     .btn-quiet:hover { color: var(--accent); border-color: var(--accent); }
 
+    /* ---- Deck picker chips ---- */
+    .chips {
+      display:flex; flex-wrap:nowrap; overflow-x:auto; gap:.4rem; margin:0 0 1.6rem;
+      padding-bottom:.2rem; -webkit-overflow-scrolling:touch; scrollbar-width:thin;
+    }
+    .chips::-webkit-scrollbar { height:4px; }
+    .chips::-webkit-scrollbar-thumb { background:var(--line); border-radius:4px; }
+    .chip {
+      flex:0 0 auto; font-family:inherit; font-size:.9rem; color:var(--ink-soft);
+      background:var(--paper-card); border:1px solid var(--line); border-radius:999px;
+      padding:.42rem .95rem; cursor:pointer; white-space:nowrap;
+      transition:color .15s ease, border-color .15s ease, background .15s ease;
+    }
+    .chip:hover { color:var(--accent); border-color:var(--accent); }
+    .chip.active { color:#fff; background:var(--accent); border-color:var(--accent); }
+
     /* ---- Controls ---- */
     .controls { display:flex; align-items:center; justify-content:space-between; gap:.8rem; flex-wrap:wrap; margin-bottom:1.3rem; }
     .progress { font-size:1.05rem; color: var(--ink-soft); font-style: italic; }
@@ -100,6 +116,8 @@
       <p class="subtitle">Tap a card to flip it</p>
     </header>
 
+    <nav class="chips" id="deck" aria-label="Choose a deck"></nav>
+
     <div id="app" hidden>
       <div class="controls">
         <div class="progress" id="progress"></div>
@@ -145,8 +163,11 @@
     const knewBtn    = document.getElementById("knewBtn");
     const goAgainBtn = document.getElementById("goAgainBtn");
     const doneTotal  = document.getElementById("doneTotal");
+    const deckEl     = document.getElementById("deck");
 
-    let all = [];            // every card
+    let source = [];         // every non-removed card
+    let deckCat = "all";     // chosen deck: "all" or a category name
+    let all = [];            // cards in the chosen deck
     let roundQueue = [];     // cards still to show this round
     let nextRound = [];      // cards marked "show me again"
     let current = null;      // the card on screen
@@ -164,7 +185,31 @@
       return a;
     }
 
+    // Deck picker: All + the six categories in the book's order.
+    function buildDeckChips() {
+      const chips = [{ label: "All", value: "all" }]
+        .concat(CATEGORY_ORDER.map(c => ({ label: c, value: c })));
+      deckEl.innerHTML = chips.map(c =>
+        '<button class="chip' + (c.value === deckCat ? " active" : "") +
+        '" type="button" data-cat="' + escapeHtml(c.value) + '">' + escapeHtml(c.label) + "</button>"
+      ).join("");
+    }
+
+    deckEl.addEventListener("click", e => {
+      const btn = e.target.closest(".chip");
+      if (!btn) return;
+      deckCat = btn.dataset.cat;
+      [...deckEl.children].forEach(ch => ch.classList.toggle("active", ch.dataset.cat === deckCat));
+      startSession();
+    });
+
+    function deckCards() {
+      return deckCat === "all" ? source : source.filter(t => t.category === deckCat);
+    }
+
     function startSession() {
+      all = deckCards();
+      total = all.length;
       knownCount = 0;
       nextRound = [];
       roundQueue = shuffle(all);   // shuffle the deck each new session
@@ -251,9 +296,9 @@
     // ---- Load ----
     loadTerms()
       .then(terms => {
-        all = terms;
-        total = all.length;
+        source = terms;
         statusEl.style.display = "none";
+        buildDeckChips();
         startSession();
       })
       .catch(err => {
