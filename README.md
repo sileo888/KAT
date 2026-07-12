@@ -11,6 +11,7 @@ share **one** vocabulary file — so a change made once appears everywhere.
 | `index.html` | The front door — a simple menu linking to every study tool. |
 | `lexicon.html` | The **Lexicon**: a searchable vocabulary of key terms, each on its own card. |
 | `flashcards.html` | **Flash Cards**: tap a card to flip term ↔ meaning, with reverse practice. |
+| `keystone.html` | **The Keystone**: a single, still reading page — one passage to sit with (no tools). |
 | `terms.json` | **The shared pantry** — every term lives here, and all tools read from it. |
 | `shared.js` | Common code the tools share (loading terms, showing corrections). |
 
