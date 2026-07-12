@@ -148,8 +148,11 @@
     <footer>Cards you mark “Show me again” keep coming back until every term is known.</footer>
   </div>
 
-  <script src="shared.js"></script>
+  <script src="shared.js?v=3"></script>
   <script>
+    // The categories, in the book's order of motion (not alphabetical).
+    const CATEGORY_ORDER = ["The Two Realities", "The Receiver", "The Turn", "The Summit", "The Saturation", "The Descent"];
+
     const appEl      = document.getElementById("app");
     const doneEl     = document.getElementById("done");
     const statusEl   = document.getElementById("status");
@@ -296,7 +299,8 @@
     // ---- Load ----
     loadTerms()
       .then(terms => {
-        source = terms;
+        // Skip removed entries before building decks, counts, or cards.
+        source = terms.filter(t => !t.removed);
         statusEl.style.display = "none";
         buildDeckChips();
         startSession();

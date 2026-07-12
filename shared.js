@@ -19,16 +19,6 @@ async function loadTerms() {
   return data.terms.filter(t => !t.removed);
 }
 
-/* The categories, in the book's order of motion (not alphabetical). */
-const CATEGORY_ORDER = [
-  "The Two Realities",
-  "The Receiver",
-  "The Turn",
-  "The Summit",
-  "The Saturation",
-  "The Descent",
-];
-
 /* Make text safe to place inside the page. */
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, c => (

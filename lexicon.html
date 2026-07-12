@@ -188,8 +188,11 @@
     <footer>Study lexicon · terms are kept in alphabetical order · originals are never deleted.</footer>
   </div>
 
-  <script src="shared.js"></script>
+  <script src="shared.js?v=3"></script>
   <script>
+    // The categories, in the book's order of motion (not alphabetical).
+    const CATEGORY_ORDER = ["The Two Realities", "The Receiver", "The Turn", "The Summit", "The Saturation", "The Descent"];
+
     const cardsEl  = document.getElementById("cards");
     const emptyEl  = document.getElementById("empty");
     const countEl  = document.getElementById("count");
@@ -349,7 +352,9 @@
 
     loadTerms()
       .then(terms => {
-        sorted = sortTerms(terms);
+        // Skip removed entries before sorting, counting, chips, or cards.
+        const active = terms.filter(t => !t.removed);
+        sorted = sortTerms(active);
         statusEl.style.display = "none";
         buildChips();
         render();
