@@ -24,6 +24,8 @@
       line-height: 1.65; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
     }
     .wrap { max-width: 680px; margin: 0 auto; padding: 3.4vh 22px 12vh; }
+    /* The "See all terms" grid uses a wider container so several cards fit per row. */
+    .wrap.wide { max-width: 1100px; }
 
     /* ---- Top navigation ---- */
     .nav { display: flex; gap: .4rem; justify-content: center; flex-wrap: wrap; margin-bottom: 2rem; }
@@ -125,6 +127,26 @@
     .defsource, .defflag { display:block; font-size:.82rem; line-height:1.5; color:var(--ink-soft); margin-top:.55rem; }
     .defsource { font-style:italic; }
 
+    /* ---- See all terms: compact grid ---- */
+    .gridview { display:grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap:.85rem; }
+    .gcard {
+      background:var(--paper-card); border:1px solid var(--line); border-radius:14px;
+      padding:.85rem .95rem; box-shadow:var(--shadow); display:flex; flex-direction:column;
+    }
+    .gterm { font-size:1.02rem; font-weight:600; letter-spacing:.03em; color:var(--accent); margin:0 0 .4rem; line-height:1.2; }
+    .gdef { font-size:.86rem; line-height:1.45; color:var(--ink); }
+    .gdef.clipped { max-height:7.3em; overflow:hidden; }
+    .gdef .definition { margin:0; }
+    .gdef .defsource, .gdef .defflag { display:block; font-size:.76rem; color:var(--ink-soft); margin-top:.35rem; }
+    .gdef .defsource { font-style:italic; }
+    .gdef .superseded { font-size:.78rem; margin-top:.5rem; padding-top:.4rem; }
+    .gmore {
+      align-self:flex-start; margin-top:.5rem; font-family:inherit; font-size:.78rem; color:var(--ink-soft);
+      background:transparent; border:1px solid var(--line); border-radius:8px; padding:.2rem .6rem; cursor:pointer;
+      transition:color .15s ease, border-color .15s ease;
+    }
+    .gmore:hover { color:var(--accent); border-color:var(--accent); }
+
     .status { text-align:center; color: var(--ink-soft); font-style:italic; padding:3rem 0; }
     footer { margin-top: 3rem; text-align:center; color: var(--ink-soft); font-size:.85rem; font-style:italic; }
   </style>
@@ -147,6 +169,7 @@
     <div class="viewtoggle" id="viewToggle" role="group" aria-label="Viewing mode">
       <button class="vt-btn active" type="button" data-view="one">One card</button>
       <button class="vt-btn" type="button" data-view="all">All cards</button>
+      <button class="vt-btn" type="button" data-view="grid">See all terms</button>
     </div>
 
     <nav class="chips" id="deck" aria-label="Choose a deck"></nav>
@@ -181,6 +204,8 @@
 
     <section class="allview" id="allview" hidden aria-label="All cards in this deck"></section>
 
+    <section class="gridview" id="gridview" hidden aria-label="All terms in this deck"></section>
+
     <p class="status" id="status">Loading the deck…</p>
 
     <footer>“Show me again” brings a card back later in the same round; “Next flashcard” just skips ahead.</footer>
@@ -209,6 +234,8 @@
     const deckEl     = document.getElementById("deck");
     const viewToggle = document.getElementById("viewToggle");
     const allviewEl  = document.getElementById("allview");
+    const gridEl     = document.getElementById("gridview");
+    const wrapEl     = document.querySelector(".wrap");
 
     let source = [];         // every non-removed card
     let deckCat = "all";     // chosen deck: "all" or a category name
@@ -349,20 +376,50 @@
       ).join("");
     }
 
+    // ---- See all terms: compact grid ----
+    function renderGrid() {
+      const list = deckCards();
+      gridEl.innerHTML = list.map(t =>
+        '<article class="gcard">' +
+          '<h3 class="gterm">' + escapeHtml(t.term) + "</h3>" +
+          '<div class="gdef clipped">' + definitionBlockHTML(t) + "</div>" +
+          '<button class="gmore" type="button">more</button>' +
+        "</article>"
+      ).join("");
+      // Only offer "more" where the definition is actually clipped.
+      gridEl.querySelectorAll(".gcard").forEach(card => {
+        const def = card.querySelector(".gdef");
+        const more = card.querySelector(".gmore");
+        if (def.scrollHeight <= def.clientHeight + 2) more.style.display = "none";
+      });
+    }
+
+    gridEl.addEventListener("click", e => {
+      const btn = e.target.closest(".gmore");
+      if (!btn) return;
+      const def = btn.parentElement.querySelector(".gdef");
+      const clipped = def.classList.toggle("clipped");
+      btn.textContent = clipped ? "more" : "less";
+    });
+
     function updateView() {
+      wrapEl.classList.toggle("wide", view === "grid");
+      appEl.setAttribute("hidden", "");
+      doneEl.setAttribute("hidden", "");
+      allviewEl.setAttribute("hidden", "");
+      gridEl.setAttribute("hidden", "");
+
       if (view === "all") {
-        appEl.setAttribute("hidden", "");
-        doneEl.setAttribute("hidden", "");
         renderAll();
         allviewEl.removeAttribute("hidden");
+      } else if (view === "grid") {
+        renderGrid();
+        gridEl.removeAttribute("hidden");
       } else {
-        allviewEl.setAttribute("hidden", "");
         if (sessionDone) {
-          appEl.setAttribute("hidden", "");
           doneTotal.textContent = total;
           doneEl.removeAttribute("hidden");
         } else {
-          doneEl.setAttribute("hidden", "");
           appEl.removeAttribute("hidden");
         }
       }
