@@ -88,6 +88,9 @@
     .deflabel { font-variant: small-caps; letter-spacing:.03em; font-weight:700; color: var(--accent); }
     .superseded { font-size:.92rem; color: var(--ink-soft); margin:.9rem 0 0; padding-top:.75rem; border-top:1px dashed var(--line); }
     .sup-label { font-variant: small-caps; letter-spacing:.03em; font-weight:700; color: var(--ink-soft); }
+    .correction-note { font-size:.94rem; color: var(--ink); margin:.9rem 0 0; padding-top:.75rem; border-top:1px dashed var(--line); }
+    .corr-label { font-variant: small-caps; letter-spacing:.03em; font-weight:700; color: var(--accent); }
+    .gdef .correction-note { font-size:.8rem; margin-top:.5rem; padding-top:.4rem; }
 
     .fcard-hint { text-align:center; color: var(--ink-soft); font-style:italic; font-size:.9rem; }
 
@@ -211,7 +214,7 @@
     <footer>“Show me again” brings a card back later in the same round; “Next flashcard” just skips ahead.</footer>
   </div>
 
-  <script src="shared.js?v=3"></script>
+  <script src="shared.js?v=4"></script>
   <script>
     // The categories, in the book's order of motion (not alphabetical).
     const CATEGORY_ORDER = ["The Two Realities", "The Receiver", "The Turn", "The Summit", "The Saturation", "The Descent"];
@@ -306,7 +309,7 @@
       if (!current) return;
       const t = current;
       const termFace = '<div class="face-term">' + escapeHtml(t.term) + "</div>";
-      const defFace  = '<div class="face-def">' + definitionBlockHTML(t) + "</div>";
+      const defFace  = '<div class="face-def">' + definitionBlockHTML(t, null, getLocalCorrection(t.term)) + "</div>";
 
       let showing, hint;
       if (!reverse) {
@@ -372,7 +375,7 @@
       const list = deckCards();
       allviewEl.innerHTML = list.map(t =>
         '<article class="allcard"><h2 class="aterm">' + escapeHtml(t.term) + "</h2>" +
-        definitionBlockHTML(t) + "</article>"
+        definitionBlockHTML(t, null, getLocalCorrection(t.term)) + "</article>"
       ).join("");
     }
 
@@ -382,7 +385,7 @@
       gridEl.innerHTML = list.map(t =>
         '<article class="gcard">' +
           '<h3 class="gterm">' + escapeHtml(t.term) + "</h3>" +
-          '<div class="gdef clipped">' + definitionBlockHTML(t) + "</div>" +
+          '<div class="gdef clipped">' + definitionBlockHTML(t, null, getLocalCorrection(t.term)) + "</div>" +
           '<button class="gmore" type="button">more</button>' +
         "</article>"
       ).join("");

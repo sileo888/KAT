@@ -118,8 +118,23 @@
     }
     .sup-label { font-variant: small-caps; letter-spacing: .03em; font-weight: 700; color: var(--ink-soft); display: inline; }
 
+    /* ---- Correction below the original (State B) ---- */
+    .correction-note {
+      font-size: .98rem; color: var(--ink); margin: .95rem 0 0; padding-top: .8rem;
+      border-top: 1px dashed var(--line);
+    }
+    .corr-label { font-variant: small-caps; letter-spacing: .03em; font-weight: 700; color: var(--accent); display: inline; }
+
     /* ---- Correction drafting tool ---- */
-    .card-tools { margin-top: 1.1rem; }
+    .card-tools { margin-top: 1.1rem; display: flex; flex-wrap: wrap; align-items: center; gap: .6rem .8rem; }
+    .corr-state { font-size: .9rem; color: var(--ink-soft); font-style: italic; }
+    .quiet-link { font-size: .88rem; color: var(--ink-soft); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+    .quiet-link:hover { color: var(--accent); }
+    .btn-warn {
+      font-size: .9rem; color: var(--ink-soft); background: transparent; border: 1px solid var(--line);
+      border-radius: 10px; padding: .4rem .8rem; transition: color .15s ease, border-color .15s ease;
+    }
+    .btn-warn:hover { color: #9a3b2c; border-color: #9a3b2c; }
     button { font-family: inherit; cursor: pointer; }
     .btn-draft {
       font-size: .9rem; color: var(--ink-soft); background: transparent;
@@ -188,7 +203,7 @@
     <footer>Study lexicon · terms are kept in alphabetical order · originals are never deleted.</footer>
   </div>
 
-  <script src="shared.js?v=3"></script>
+  <script src="shared.js?v=4"></script>
   <script>
     // The categories, in the book's order of motion (not alphabetical).
     const CATEGORY_ORDER = ["The Two Realities", "The Receiver", "The Turn", "The Summit", "The Saturation", "The Descent"];
@@ -238,6 +253,27 @@
       if (card) card.scrollIntoView({ behavior: "smooth", block: "start" });
     });
 
+    // The tools shown under a card depend on its state (A / B / C).
+    function toolsHTML(t, localCorr) {
+      const corr = resolveCorrection(t, localCorr);
+      if (corr && corr.source === "filed") {
+        return '<span class="corr-state">This term has a filed correction.</span>' +
+               '<button class="btn-draft" type="button" data-action="draft">Draft a correction</button>';
+      }
+      if (localCorr && localCorr.replaced) {          // STATE C (device-local)
+        return '<span class="corr-state">Original replaced on this device — kept in the pantry record.</span>' +
+               '<a class="quiet-link" role="button" tabindex="0" data-action="filing">Copy filing block</a>' +
+               '<a class="quiet-link" role="button" tabindex="0" data-action="undo">Undo replace</a>' +
+               '<button class="btn-draft" type="button" data-action="draft">Revise correction</button>';
+      }
+      if (localCorr) {                                // STATE B (device-local)
+        return '<a class="quiet-link" role="button" tabindex="0" data-action="filing">Copy filing block</a>' +
+               '<button class="btn-warn" type="button" data-action="replace">Delete and replace original</button>' +
+               '<button class="btn-draft" type="button" data-action="draft">Revise correction</button>';
+      }
+      return '<button class="btn-draft" type="button" data-action="draft">Draft a correction</button>';  // STATE A
+    }
+
     function render(query = "") {
       const q = query.trim().toLowerCase();
       const decorate = safe => markQuery(safe, query);
@@ -255,32 +291,33 @@
         const L = sortKey(t.term).charAt(0).toUpperCase();
         if (!(L in firstIndex)) { firstIndex[L] = i; lettersSeen.push(L); }
 
+        const localCorr = getLocalCorrection(t.term);
+
         const card = document.createElement("article");
         card.className = "card";
         card.id = "term-" + i;
         card.dataset.index = i;
         card.innerHTML =
           '<h2 class="term">' + termHTML(t.term, query) + "</h2>" +
-          definitionBlockHTML(t, decorate) +
-          '<div class="card-tools">' +
-            '<button class="btn-draft" type="button" data-action="draft">Draft a correction</button>' +
-          "</div>" +
+          definitionBlockHTML(t, decorate, localCorr) +
+          '<div class="card-tools">' + toolsHTML(t, localCorr) + "</div>" +
           '<div class="correction" hidden>' +
-            '<label class="corr-hint">Edit the wording below, then make a copy-ready block. Nothing is saved here.</label>' +
+            '<label class="corr-hint">Edit the wording below, then save it — it is stored on this device.</label>' +
             '<textarea class="corr-input" aria-label="Corrected definition"></textarea>' +
             '<div class="corr-actions">' +
-              '<button class="btn-primary" type="button" data-action="make">Make copy-ready block</button>' +
+              '<button class="btn-primary" type="button" data-action="save">Save correction here</button>' +
+              '<button class="btn-warn" type="button" data-action="replace">Delete and replace original</button>' +
               '<button class="btn-quiet" type="button" data-action="close">Close</button>' +
             "</div>" +
-            '<div class="corr-output" hidden>' +
-              '<p class="corr-note">Copy this and paste it wherever you keep your changes (for example, send it to me):</p>' +
-              '<pre class="corr-block"></pre>' +
-              '<button class="btn-quiet" type="button" data-action="copy">Copy</button>' +
-            "</div>" +
+          "</div>" +
+          '<div class="filing" hidden>' +
+            '<p class="corr-note">Filing block — put this into terms.json (or send it to me) so the same correction appears on every device:</p>' +
+            '<pre class="corr-block"></pre>' +
+            '<button class="btn-quiet" type="button" data-action="copyfiling">Copy</button>' +
           "</div>";
 
-        // Pre-fill the editor with the definition currently in force.
-        card.querySelector(".corr-input").value = currentDefinition(t);
+        // Pre-fill the editor with the wording currently in force.
+        card.querySelector(".corr-input").value = effectiveDefinition(t, localCorr);
         cardsEl.appendChild(card);
       });
 
@@ -304,41 +341,73 @@
 
     // Correction tool — all buttons handled here by delegation.
     cardsEl.addEventListener("click", e => {
-      const btn = e.target.closest("button[data-action]");
+      const btn = e.target.closest("[data-action]");
       if (!btn) return;
       const card = e.target.closest(".card");
       if (!card) return;
       const t = sorted[Number(card.dataset.index)];
       const panel  = card.querySelector(".correction");
-      const output = card.querySelector(".corr-output");
+      const filing = card.querySelector(".filing");
       const input  = card.querySelector(".corr-input");
       const block  = card.querySelector(".corr-block");
+      const action = btn.dataset.action;
 
-      if (btn.dataset.action === "draft") {
+      if (action === "draft") {
         const open = !panel.hasAttribute("hidden");
         if (open) { panel.setAttribute("hidden", ""); }
         else { panel.removeAttribute("hidden"); input.focus(); }
       }
-      else if (btn.dataset.action === "make") {
+      else if (action === "save") {
+        const text = input.value.trim();
+        if (!text) return;
+        // State B: store on this device (survives closing the page). No warnings.
+        setLocalCorrection(t.term, { text: text, date: todayISO(), replaced: false });
+        render(searchEl.value);
+      }
+      else if (action === "replace") {
+        const existing = getLocalCorrection(t.term);
+        const panelOpen = !panel.hasAttribute("hidden");
+        const draft = input.value.trim();
+        const text = (panelOpen && draft) ? draft : (existing && existing.text ? existing.text : draft);
+        if (!text) return;
+        if (!window.confirm("Replace the original with your correction? The original stays preserved in the pantry record.")) return;
+        const date = (existing && existing.date) ? existing.date : todayISO();
+        // State C: only the corrected text shows; original stays in the record.
+        setLocalCorrection(t.term, { text: text, date: date, replaced: true });
+        render(searchEl.value);
+      }
+      else if (action === "undo") {
+        const existing = getLocalCorrection(t.term);
+        if (existing) { existing.replaced = false; setLocalCorrection(t.term, existing); }
+        render(searchEl.value);
+      }
+      else if (action === "filing") {
+        const corr = getLocalCorrection(t.term);
         block.textContent =
           "CORRECTION FOR THE LEXICON\n" +
           "Term: " + t.term + "\n" +
-          "Corrected definition:\n" + input.value.trim() + "\n" +
-          "Date: " + todayISO();
-        output.removeAttribute("hidden");
+          "Corrected definition:\n" + (corr && corr.text ? corr.text : effectiveDefinition(t, corr)) + "\n" +
+          "Date: " + ((corr && corr.date) ? corr.date : todayISO());
+        filing.removeAttribute("hidden");
+        copyText(block.textContent, btn, "Copy filing block");
       }
-      else if (btn.dataset.action === "copy") {
-        const text = block.textContent;
-        const done = () => { btn.textContent = "Copied!"; setTimeout(() => (btn.textContent = "Copy"), 1600); };
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText(text).then(done, () => fallbackCopy(text, done));
-        } else { fallbackCopy(text, done); }
+      else if (action === "copyfiling") {
+        copyText(block.textContent, btn, "Copy");
       }
-      else if (btn.dataset.action === "close") {
+      else if (action === "close") {
         panel.setAttribute("hidden", "");
-        output.setAttribute("hidden", "");
       }
     });
+
+    function copyText(text, btn, restore) {
+      const done = () => {
+        btn.textContent = "Copied!";
+        setTimeout(() => { btn.textContent = restore; }, 1600);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, () => fallbackCopy(text, done));
+      } else { fallbackCopy(text, done); }
+    }
 
     function fallbackCopy(text, done) {
       const ta = document.createElement("textarea");

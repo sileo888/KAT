@@ -35,15 +35,49 @@ function styleLabels(html) {
   return html;
 }
 
-/* Does this term have an in-force correction? */
+/* ---- Corrections: a device-local store that survives closing the page ----
+   A public page cannot write to the repository, so a correction saved here
+   lives in THIS browser only until its filing block is put into terms.json.
+   A FILED correction (in terms.json) always wins over a device-local one.   */
+const CORR_STORE_KEY = "kat.corrections.v1";
+function loadLocalCorrections() {
+  try { return JSON.parse(localStorage.getItem(CORR_STORE_KEY) || "{}") || {}; }
+  catch (_) { return {}; }
+}
+function getLocalCorrection(term) { return loadLocalCorrections()[term] || null; }
+function setLocalCorrection(term, corr) {
+  const all = loadLocalCorrections();
+  all[term] = corr;
+  try { localStorage.setItem(CORR_STORE_KEY, JSON.stringify(all)); } catch (_) {}
+}
+function clearLocalCorrection(term) {
+  const all = loadLocalCorrections();
+  delete all[term];
+  try { localStorage.setItem(CORR_STORE_KEY, JSON.stringify(all)); } catch (_) {}
+}
+
+/* The correction in force for a term, or null (State A).
+   Returns { text, date, replaced, source } — filed beats device-local. */
+function resolveCorrection(t, localCorr) {
+  if (t.corrected && String(t.corrected).trim()) {
+    return { text: t.corrected, date: t.correctedDate, replaced: !!t.replaced, source: "filed" };
+  }
+  if (localCorr && localCorr.text && String(localCorr.text).trim()) {
+    return { text: localCorr.text, date: localCorr.date, replaced: !!localCorr.replaced, source: "local" };
+  }
+  return null;
+}
+
+/* Does this term have an in-force (filed) correction? */
 function hasCorrection(t) {
   return !!(t.corrected && String(t.corrected).trim());
 }
 
-/* The definition currently in force: the correction if there is one,
-   otherwise the untouched original.                                  */
-function currentDefinition(t) {
-  return hasCorrection(t) ? t.corrected : t.original;
+/* The wording currently in force: the correction if there is one, else
+   the untouched original. Used to pre-fill the correction editor.        */
+function effectiveDefinition(t, localCorr) {
+  const c = resolveCorrection(t, localCorr);
+  return c ? c.text : t.original;
 }
 
 /* Editorial lines that are part of the text but shown smaller and quieter:
@@ -61,26 +95,34 @@ function definitionText(text, decorate) {
   return styleMeta(styleLabels(step(escapeHtml(String(text)))));
 }
 
-/* Build the definition block for a card.
+/* Build the definition block for a card, in one of three states:
 
-   - No correction: just the definition.
-   - With a correction: the corrected wording is the main text, and the
-     ORIGINAL is kept below it, smaller and quieter, marked as superseded.
+   STATE A — no correction: just the definition.
+   STATE B — a correction (or possible definition) lives permanently BELOW
+             the original, labeled "Correction (date)". Stable, not pending.
+   STATE C — a deliberate replace: only the corrected text shows. The
+             original is never deleted from the record; it just stops showing.
 
    `decorate` is an optional function applied to the escaped text before
-   label-styling (used by the lexicon for search highlighting).         */
-function definitionBlockHTML(t, decorate) {
-  if (hasCorrection(t)) {
-    const dateTxt = t.correctedDate ? escapeHtml(t.correctedDate) : "date not given";
-    return (
-      '<p class="definition">' + definitionText(t.corrected, decorate) + "</p>" +
-      '<p class="superseded">' +
-        '<span class="sup-label">Original (superseded ' + dateTxt + ")</span> " +
-        definitionText(t.original, decorate) +
-      "</p>"
-    );
+   label-styling (used by the lexicon for search highlighting).
+   `localCorr` is this device's saved correction for the term, if any.     */
+function definitionBlockHTML(t, decorate, localCorr) {
+  const corr = resolveCorrection(t, localCorr);
+
+  if (!corr) {                                     // STATE A
+    return '<p class="definition">' + definitionText(t.original, decorate) + "</p>";
   }
-  return '<p class="definition">' + definitionText(t.original, decorate) + "</p>";
+  if (corr.replaced) {                             // STATE C
+    return '<p class="definition">' + definitionText(corr.text, decorate) + "</p>";
+  }
+  const dateTxt = corr.date ? escapeHtml(corr.date) : "date not given";   // STATE B
+  return (
+    '<p class="definition">' + definitionText(t.original, decorate) + "</p>" +
+    '<p class="correction-note">' +
+      '<span class="corr-label">Correction (' + dateTxt + ")</span> " +
+      definitionText(corr.text, decorate) +
+    "</p>"
+  );
 }
 
 /* Sort key: alphabetise ignoring a leading "THE ". */
