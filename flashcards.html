@@ -90,12 +90,40 @@
     .fcard-hint { text-align:center; color: var(--ink-soft); font-style:italic; font-size:.9rem; }
 
     /* ---- Judge buttons ---- */
-    .judge { display:flex; gap:.8rem; margin-top:1.3rem; }
-    .judge button { flex:1; }
+    .judge { display:flex; gap:.6rem; margin-top:.3rem; flex-wrap:wrap; }
+    .judge button { flex:1 1 28%; min-width:7rem; }
 
     /* ---- Done ---- */
     .done { text-align:center; padding:3rem 1rem; }
     .done-msg { font-size:1.5rem; margin:0 0 1.4rem; }
+
+    /* ---- View toggle: One card / All cards ---- */
+    .viewtoggle { display:flex; justify-content:center; gap:.4rem; margin:0 0 1.4rem; }
+    .vt-btn {
+      font-family:inherit; font-size:.95rem; color:var(--ink-soft); background:var(--paper-card);
+      border:1px solid var(--line); border-radius:999px; padding:.45rem 1.15rem; cursor:pointer;
+      transition:color .15s ease, border-color .15s ease, background .15s ease;
+    }
+    .vt-btn:hover { color:var(--accent); border-color:var(--accent); }
+    .vt-btn.active { color:#fff; background:var(--accent); border-color:var(--accent); }
+
+    /* ---- Quiet confirmation toast ---- */
+    .toast {
+      text-align:center; min-height:1.4rem; margin:.9rem 0 .1rem; color:var(--ink-soft);
+      font-style:italic; font-size:.95rem; opacity:0; transition:opacity .18s ease;
+    }
+    .toast.show { opacity:1; }
+
+    /* ---- All-cards reading view ---- */
+    .allview { }
+    .allcard {
+      background:var(--paper-card); border:1px solid var(--line); border-radius:18px;
+      padding:1.5rem 1.6rem; margin:0 0 1rem; box-shadow:var(--shadow);
+    }
+    .aterm { font-size:clamp(1.4rem,4vw,1.9rem); font-weight:600; letter-spacing:.04em; color:var(--accent); margin:0 0 .5rem; }
+    .allcard .definition { font-size:clamp(1.05rem,2.6vw,1.2rem); color:var(--ink); margin:0; }
+    .defsource, .defflag { display:block; font-size:.82rem; line-height:1.5; color:var(--ink-soft); margin-top:.55rem; }
+    .defsource { font-style:italic; }
 
     .status { text-align:center; color: var(--ink-soft); font-style:italic; padding:3rem 0; }
     footer { margin-top: 3rem; text-align:center; color: var(--ink-soft); font-size:.85rem; font-style:italic; }
@@ -113,8 +141,13 @@
 
     <header>
       <h1>Flash Cards</h1>
-      <p class="subtitle">Tap a card to flip it</p>
+      <p class="subtitle">Tap a card to flip — or switch to All cards to read</p>
     </header>
+
+    <div class="viewtoggle" id="viewToggle" role="group" aria-label="Viewing mode">
+      <button class="vt-btn active" type="button" data-view="one">One card</button>
+      <button class="vt-btn" type="button" data-view="all">All cards</button>
+    </div>
 
     <nav class="chips" id="deck" aria-label="Choose a deck"></nav>
 
@@ -132,8 +165,11 @@
         <div class="fcard-hint" id="cardHint"></div>
       </div>
 
+      <div class="toast" id="toast" aria-live="polite"></div>
+
       <div class="judge">
         <button id="againBtn" class="btn-quiet" type="button">Show me again</button>
+        <button id="nextBtn" class="btn-quiet" type="button">Next flashcard</button>
         <button id="knewBtn" class="btn-primary" type="button">I knew it</button>
       </div>
     </div>
@@ -143,9 +179,11 @@
       <button id="goAgainBtn" class="btn-primary" type="button">Go again</button>
     </div>
 
+    <section class="allview" id="allview" hidden aria-label="All cards in this deck"></section>
+
     <p class="status" id="status">Loading the deck…</p>
 
-    <footer>Cards you mark “Show me again” keep coming back until every term is known.</footer>
+    <footer>“Show me again” brings a card back later in the same round; “Next flashcard” just skips ahead.</footer>
   </div>
 
   <script src="shared.js?v=3"></script>
@@ -160,24 +198,30 @@
     const cardEl     = document.getElementById("card");
     const faceEl     = document.getElementById("cardFace");
     const hintEl     = document.getElementById("cardHint");
+    const toastEl    = document.getElementById("toast");
     const modeBtn    = document.getElementById("modeBtn");
     const restartBtn = document.getElementById("restartBtn");
     const againBtn   = document.getElementById("againBtn");
+    const nextBtn    = document.getElementById("nextBtn");
     const knewBtn    = document.getElementById("knewBtn");
     const goAgainBtn = document.getElementById("goAgainBtn");
     const doneTotal  = document.getElementById("doneTotal");
     const deckEl     = document.getElementById("deck");
+    const viewToggle = document.getElementById("viewToggle");
+    const allviewEl  = document.getElementById("allview");
 
     let source = [];         // every non-removed card
     let deckCat = "all";     // chosen deck: "all" or a category name
     let all = [];            // cards in the chosen deck
-    let roundQueue = [];     // cards still to show this round
-    let nextRound = [];      // cards marked "show me again"
+    let roundQueue = [];     // cards not yet marked known this round
     let current = null;      // the card on screen
     let flipped = false;     // is the answer showing?
     let knownCount = 0;
     let total = 0;
     let reverse = false;     // reverse practice: definition first
+    let view = "one";        // "one" (study) | "all" (read)
+    let sessionDone = false;
+    let busy = false;        // true during the brief confirmation
 
     function shuffle(a) {
       a = [...a];
@@ -203,7 +247,7 @@
       if (!btn) return;
       deckCat = btn.dataset.cat;
       [...deckEl.children].forEach(ch => ch.classList.toggle("active", ch.dataset.cat === deckCat));
-      startSession();
+      startSession();   // a new deck is a fresh round
     });
 
     function deckCards() {
@@ -214,29 +258,25 @@
       all = deckCards();
       total = all.length;
       knownCount = 0;
-      nextRound = [];
       roundQueue = shuffle(all);   // shuffle the deck each new session
-      doneEl.setAttribute("hidden", "");
-      appEl.removeAttribute("hidden");
-      showNext();
+      sessionDone = false;
+      busy = false;
+      showToast("");
+      advance();
+      updateProgress();
+      updateView();
     }
 
-    function showNext() {
-      if (roundQueue.length === 0) {
-        if (nextRound.length > 0) {
-          roundQueue = shuffle(nextRound);   // shuffle again each new round
-          nextRound = [];
-        } else {
-          return showDone();
-        }
-      }
+    // Move to the card at the front of the round (or finish if none remain).
+    function advance() {
+      if (roundQueue.length === 0) { sessionDone = true; current = null; return; }
       current = roundQueue[0];
       flipped = false;
       renderCard();
-      updateProgress();
     }
 
     function renderCard() {
+      if (!current) return;
       const t = current;
       const termFace = '<div class="face-term">' + escapeHtml(t.term) + "</div>";
       const defFace  = '<div class="face-def">' + definitionBlockHTML(t) + "</div>";
@@ -254,17 +294,88 @@
       hintEl.textContent = hint;
     }
 
-    function flip() { flipped = !flipped; renderCard(); }
+    function flip() { if (!current) return; flipped = !flipped; renderCard(); }
 
     function updateProgress() {
       progressEl.innerHTML = "<strong>" + knownCount + "</strong> of " + total + " known";
     }
 
-    function showDone() {
-      appEl.setAttribute("hidden", "");
-      doneTotal.textContent = total;
-      doneEl.removeAttribute("hidden");
+    // Take the current card off the front and slot it back `offset` places along,
+    // so it stays in this round and returns later.
+    function reinsertCurrent(offset) {
+      const c = roundQueue.shift();
+      const pos = Math.max(0, Math.min(offset, roundQueue.length));
+      roundQueue.splice(pos, 0, c);
     }
+
+    function showToast(msg) {
+      toastEl.textContent = msg || "";
+      toastEl.classList.toggle("show", !!msg);
+    }
+
+    // The three buttons. Each shows a brief, quiet confirmation, then advances.
+    function resolve(action) {
+      if (busy || !current || view !== "one") return;
+      busy = true;
+      let msg;
+      if (action === "known") {
+        knownCount++;
+        roundQueue.shift();               // known -> leaves the round
+        msg = "Known";
+      } else if (action === "again") {
+        reinsertCurrent(3);               // not known -> returns a few cards later
+        msg = "Coming back later";
+      } else { // "next"
+        reinsertCurrent(roundQueue.length); // neutral skip -> stays, moves to the back
+        msg = "Skipped";
+      }
+      updateProgress();
+      showToast(msg);
+      setTimeout(() => {
+        showToast("");
+        busy = false;
+        advance();
+        updateProgress();
+        updateView();
+      }, 700);
+    }
+
+    // ---- All-cards reading view ----
+    function renderAll() {
+      const list = deckCards();
+      allviewEl.innerHTML = list.map(t =>
+        '<article class="allcard"><h2 class="aterm">' + escapeHtml(t.term) + "</h2>" +
+        definitionBlockHTML(t) + "</article>"
+      ).join("");
+    }
+
+    function updateView() {
+      if (view === "all") {
+        appEl.setAttribute("hidden", "");
+        doneEl.setAttribute("hidden", "");
+        renderAll();
+        allviewEl.removeAttribute("hidden");
+      } else {
+        allviewEl.setAttribute("hidden", "");
+        if (sessionDone) {
+          appEl.setAttribute("hidden", "");
+          doneTotal.textContent = total;
+          doneEl.removeAttribute("hidden");
+        } else {
+          doneEl.setAttribute("hidden", "");
+          appEl.removeAttribute("hidden");
+        }
+      }
+    }
+
+    // ---- View toggle (does NOT restart the round) ----
+    viewToggle.addEventListener("click", e => {
+      const btn = e.target.closest(".vt-btn");
+      if (!btn) return;
+      view = btn.dataset.view;
+      [...viewToggle.children].forEach(b => b.classList.toggle("active", b.dataset.view === view));
+      updateView();
+    });
 
     // ---- Flipping (touch + click + keyboard) ----
     cardEl.addEventListener("click", flip);
@@ -272,19 +383,10 @@
       if (e.key === "Enter" || e.key === " ") { e.preventDefault(); flip(); }
     });
 
-    // ---- Judging ----
-    knewBtn.addEventListener("click", () => {
-      if (!current) return;
-      knownCount++;
-      roundQueue.shift();       // known -> gone from rotation
-      showNext();
-    });
-    againBtn.addEventListener("click", () => {
-      if (!current) return;
-      const c = roundQueue.shift();
-      nextRound.push(c);        // comes back in a later round
-      showNext();
-    });
+    // ---- The three buttons ----
+    knewBtn.addEventListener("click", () => resolve("known"));
+    againBtn.addEventListener("click", () => resolve("again"));
+    nextBtn.addEventListener("click", () => resolve("next"));
 
     // ---- Controls ----
     modeBtn.addEventListener("click", () => {
